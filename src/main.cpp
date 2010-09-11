@@ -1,16 +1,6 @@
 #include <iostream>
 #include "planet_wars.h"
 
-// The DoTurn function is where your code goes. The PlanetWars object contains
-// the state of the game, including information about all planets and fleets
-// that currently exist. Inside this function, you issue orders using the
-// pw.IssueOrder() function. For example, to send 10 ships from planet 3 to
-// planet 8, you would say pw.IssueOrder(3, 8, 10).
-//
-// There is already a basic strategy in place here. You can use it as a
-// starting point, or you can throw it out entirely and replace it with your
-// own. Check out the tutorials and articles on the contest website at
-// http://www.ai-contest.com/resources.
 void make_move(const planet_wars& pw) {
   // (1) If we currently have a fleet in flight, just do nothing.
   if (pw.my_fleets().size() >= 1) {
@@ -23,7 +13,7 @@ void make_move(const planet_wars& pw) {
   std::vector<planet> my_planets = pw.my_planets();
   for (int i = 0; i < my_planets.size(); ++i) {
     const planet& p = my_planets[i];
-    double score = (double)p.num_ships();
+    double score = (double) p.num_ships();
     if (score > source_score) {
       source_score = score;
       source = p.planet_id();
@@ -57,13 +47,13 @@ int main(int argc, char *argv[]) {
   std::string map_data;
   while (true) {
     int c = std::cin.get();
-    current_line += (char)c;
+    current_line += (char) c;
     if (c == '\n') {
       if (current_line.length() >= 2 && current_line.substr(0, 2) == "go") {
         planet_wars pw(map_data);
         map_data = "";
         make_move(pw);
-	pw.finish_turn();
+        pw.finish_turn();
       } else {
         map_data += current_line;
       }

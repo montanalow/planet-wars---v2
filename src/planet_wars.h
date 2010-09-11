@@ -11,26 +11,21 @@
 
 // This is a utility class that parses strings.
 class string_util {
- public:
+public:
   // Tokenizes a string s into tokens. Tokens are delimited by any of the
   // characters in delimiters. Blank tokens are omitted.
   static void tokenize(const std::string& s, const std::string& delimiters, std::vector<std::string>& tokens);
 
-  // A more convenient way of calling the Tokenize() method.
+  // A more convenient way of calling the tokenize() method.
   static std::vector<std::string> tokenize(const std::string& s, const std::string& delimiters = std::string(" "));
 };
 
 // This class stores details about one fleet. There is one of these classes
 // for each fleet that is in flight at any given time.
 class fleet {
- public:
+public:
   // Initializes a fleet.
-  fleet(int owner,
-        int num_ships,
-        int source_planet = -1,
-        int destination_planet = -1,
-        int total_trip_length = -1,
-        int turns_remaining = -1);
+  fleet(int owner, int num_ships, int source_planet = -1, int destination_planet = -1, int total_trip_length = -1, int turns_remaining = -1);
 
   // Returns the playerID of the owner of the fleet. Your player ID is always
   // 1. So if the owner is 1, you own the fleet. If the owner is 2 or some
@@ -55,7 +50,7 @@ class fleet {
   // this value is 1, then the fleet will hit the destination planet next turn.
   int turns_remaining() const;
 
- private:
+private:
   int _owner;
   int _num_ships;
   int _source_planet;
@@ -67,14 +62,9 @@ class fleet {
 // Stores information about one planet. There is one instance of this class
 // for each planet on the map.
 class planet {
- public:
+public:
   // Initializes a planet.
-  planet(int planet_id,
-         int owner,
-         int num_ships,
-         int growth_rate,
-         double x,
-         double y);
+  planet(int planet_id, double x, double y, int owner, int num_ships, int growth_rate);
 
   // Returns the ID of this planets. Planets are numbered starting at zero.
   int planet_id() const;
@@ -106,7 +96,7 @@ class planet {
   void add_ships(int amount);
   void remove_ships(int amount);
 
- private:
+private:
   int _planet_id;
   int _owner;
   int _num_ships;
@@ -115,7 +105,7 @@ class planet {
 };
 
 class planet_wars {
- public:
+public:
   // Initializes the game state given a string containing game state data.
   planet_wars(const std::string& game_state);
 
@@ -176,9 +166,7 @@ class planet_wars {
   // else your bot will get kicked and lose the game. For example, you must own
   // source_planet, and you can't send more ships than you actually have on
   // that planet.
-  void issue_order(int source_planet,
-		  int destination_planet,
-		  int num_ships) const;
+  void issue_order(int source_planet, int destination_planet, int num_ships) const;
 
   // Returns true if the named player owns at least one planet or fleet.
   // Otherwise, the player is deemed to be dead and false is returned.
@@ -192,7 +180,7 @@ class planet_wars {
   // issuing orders for now.
   void finish_turn() const;
 
- private:
+private:
   // Parses a game state from a string. On success, returns 1. On failure,
   // returns 0.
   int parse_game_state(const std::string& s);
