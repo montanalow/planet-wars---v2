@@ -11,58 +11,64 @@ wins = 0
 losses = 0
 collisions = 0
 draws = 0
-m_results = Hash.new {|hash,key| hash[key] = {:wins => 0, :losses => 0, :draws => 0}}
+win_moves = 0
+
+m_results = Hash.new {|hash,key| hash[key] = {:wins => 0, :win_moves => 0, :losses => 0, :draws => 0}}
 maps.each do |m|
   bots.each do |b|
 #    next if m == "huge-room.txt" || m.include?("test") || m.include?( "profile" )
-    debug = `java -jar tools/PlayGame.jar maps/#{m} 1000 1000 log.txt build/planet_wars "java -jar example_bots/#{b}" 2>&1`
-    result = debug.split("\n")[-2]
+    debug = `java -jar tools/PlayGame.jar maps/#{m} 1000 1000 log.txt build/planet_wars "java -jar example_bots/#{b}" 2>&1`.split "\n"
+    result = debug[-2]
     print "1 vs #{b} @ #{m}: "
     if result == "Player 1 Wins!"
       m_results[m][:wins] += 1
+      m_results[m][:win_moves] += debug.size
       wins += 1
-      puts "win"
+      win_moves += debug.size
+      puts "!!! win !!! (#{debug.size - 1} moves)"
     elsif result == "Player 2 Wins!"
       m_results[m][:losses] += 1
       losses += 1
-      puts "loss"
-    elsif result == "Draw!"
+      puts "@@@ loss @@@ (#{debug.size - 1} moves)"
+    elsif result == "Draw! #{debug.size}"
       m_results[m][:draws] += 1
       collisions += 1
-      puts "draw"
+      puts "draw (#{debug.size - 1} moves)"
     end
 
-    debug = `java -jar tools/PlayGame.jar maps/#{m} 1000 1000 log.txt "java -jar example_bots/#{b}" build/planet_wars 2>&1`
-    result = debug.split("\n")[-2]
+    debug = `java -jar tools/PlayGame.jar maps/#{m} 1000 1000 log.txt "java -jar example_bots/#{b}" build/planet_wars 2>&1`.split "\n"
+    result = debug[-2]
     print "2 vs #{b} @ #{m}: "
     if result == "Player 2 Wins!"
       m_results[m][:wins] += 1
+      m_results[m][:win_moves] += debug.size
       wins += 1
-      puts "win"
+      win_moves += debug.size
+      puts "!!! win !!! (#{debug.size - 1} moves)"
     elsif result == "Player 1 Wins!"
       m_results[m][:losses] += 1
       losses += 1
-      puts "loss"
+      puts "@@@ loss @@@ (#{debug.size - 1} moves)"
     elsif result == "Draw!"
       m_results[m][:draws] += 1
       collisions += 1
-      puts "draw"
+      puts "draw (#{debug.size - 1} moves)"
     end
   end
 end
 
-puts "-------------------------------"
-puts "Wins: #{wins}"
-puts "Losses: #{losses}"
-puts "Draws: #{draws}"
-puts "-------------------------------"
-puts "Ratio: #{(wins.to_f + 0.5 * (draws + collisions)) / (wins + losses + draws + collisions)}"
 m_results.each do |map, results|
   puts "================================"
   puts "@ #{map}"
-  puts "Wins: #{results[:wins]}"
+  puts "Wins: #{results[:wins]} (#{results[:win_moves] / (bots.size * 2)} avg moves)"
   puts "Losses: #{results[:losses]}"
   puts "Draws: #{results[:draws]}"
   puts "-------------------------------"
   puts "Ratio: #{(results[:wins].to_f + 0.5 * results[:draws]) / (results[:wins] + results[:losses] + results[:draws])}"
 end
+puts "-------------------------------"
+puts "Wins: #{wins} (#{win_moves / (bots.size * maps.size * 2)} avg moves)"
+puts "Losses: #{losses}"
+puts "Draws: #{draws}"
+puts "-------------------------------"
+puts "Ratio: #{(wins.to_f + 0.5 * (draws + collisions)) / (wins + losses + draws + collisions)}"

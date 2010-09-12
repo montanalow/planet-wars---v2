@@ -32,7 +32,10 @@ void make_move(pw::game_state& game_state, std::ofstream& logger) {
         source.num_ships(),
         d.num_ships() + 1
       );
-      if (destination) {
+      
+      if (destination == NULL || destination->id() == source.id()) {
+        break;
+      } else {
         game_state.issue_order(source, *destination, num_ships);
       }
     }
