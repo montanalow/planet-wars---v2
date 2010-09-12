@@ -1,61 +1,61 @@
+#include <algorithm>
 #include <iostream>
-#include "planet_wars.h"
+#include <fstream>
 
-void make_move(const planet_wars& pw) {
-  // (1) If we currently have a fleet in flight, just do nothing.
-  if (pw.my_fleets().size() >= 1) {
-    return;
-  }
-  // (2) Find my strongest planet.
-  int source = -1;
-  double source_score = -999999.0;
-  int source_num_ships = 0;
-  std::vector<planet> my_planets = pw.my_planets();
-  for (int i = 0; i < my_planets.size(); ++i) {
-    const planet& p = my_planets[i];
-    double score = (double) p.num_ships();
-    if (score > source_score) {
-      source_score = score;
-      source = p.planet_id();
-      source_num_ships = p.num_ships();
+
+#include "game_state.h"
+#include "util.h"
+
+void make_move(pw::game_state& game_state, std::ofstream& logger) {
+  std::vector<pw::planet> sources = game_state.my_planets();
+  std::vector<pw::planet> destinations = game_state.planets();
+  for (int i = 0; i < sources.size(); ++i) {
+    pw::planet& source = sources[i];
+    while (source.num_ships() > 0) {
+      pw::planet* destination = NULL;
+      double highest_value = -9999999;
+
+      // find the destination with the highest value
+      for (int i = 0; i < destinations.size(); ++i) {
+        pw::planet& planet = destinations[i];
+        double value = planet.value_in(source.turns_to(planet));
+
+        if (value > highest_value) {
+          destination = &planet;
+          highest_value = value;
+        }
+      }
+
+      // find the min ships we need to send
+      pw::planet d = destination->in(source.turns_to(*destination));
+      int num_ships = std::min(
+        source.num_ships(),
+        d.num_ships() + 1
+      );
+      if (destination) {
+        game_state.issue_order(source, *destination, num_ships);
+      }
     }
-  }
-  // (3) Find the weakest enemy or neutral planet.
-  int dest = -1;
-  double dest_score = -999999.0;
-  std::vector<planet> not_my_planets = pw.not_my_planets();
-  for (int i = 0; i < not_my_planets.size(); ++i) {
-    const planet& p = not_my_planets[i];
-    double score = 1.0 / (1 + p.num_ships());
-    if (score > dest_score) {
-      dest_score = score;
-      dest = p.planet_id();
-    }
-  }
-  // (4) Send half the ships from my strongest planet to the weakest
-  // planet that I do not own.
-  if (source >= 0 && dest >= 0) {
-    int num_ships = source_num_ships / 2;
-    pw.issue_order(source, dest, num_ships);
   }
 }
 
 // This is just the main game loop that takes care of communicating with the
 // game engine for you. You don't have to understand or change the code below.
 int main(int argc, char *argv[]) {
+  std::ofstream logger("debug.log", std::ios::app);
   std::string current_line;
-  std::string map_data;
+  std::string game_state_data;
   while (true) {
     int c = std::cin.get();
     current_line += (char) c;
     if (c == '\n') {
       if (current_line.length() >= 2 && current_line.substr(0, 2) == "go") {
-        planet_wars pw(map_data);
-        map_data = "";
-        make_move(pw);
-        pw.finish_turn();
+        pw::game_state game_state(game_state_data);
+        game_state_data = "";
+        make_move(game_state, logger);
+        game_state.finish_turn();
       } else {
-        map_data += current_line;
+        game_state_data += current_line;
       }
       current_line = "";
     }

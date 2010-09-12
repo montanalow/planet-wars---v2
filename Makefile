@@ -1,24 +1,34 @@
-CC = g++
-SRC = ./src/
-BUILD = ./build/
-O = -02 #-O3 -funroll-loops
-PROFILE = #-fprofile-use
+C++ = g++
+C++_FLAGS = -02 -c -o $@ $< #-fprofile-use
+LINKER = g++
+LINKER_FLAGS = -o #-fprofile-use
 
-all: main package
+SRC = src
+BUILD = build
+TARGET = planet_wars
+OBJS = $(BUILD)/main.o\
+  $(BUILD)/game_state.o\
+  $(BUILD)/fleet.o\
+  $(BUILD)/planet.o\
+  $(BUILD)/util.o
 
-main: main.o planet_wars.o
-	$(CC) $(O) $(PROFILE) -o $(BUILD)planet_wars $(BUILD)main.o $(BUILD)planet_wars.o
+all: $(TARGET) package
 
-main.o:
-	$(CC) -c $(O) -o $(BUILD)main.o $(SRC)main.cpp
+$(TARGET): $(OBJS)
+	$(LINKER) $(LINKER_FLAGS) $(BUILD)/$(TARGET) $(OBJS)
 
-planet_wars.o:
-	$(CC) -c $(O) -o $(BUILD)planet_wars.o $(SRC)planet_wars.cpp
+$(BUILD)/%.o: $(SRC)/%.cpp $(SRC)/*.h
+	$(C++) $(C++_FLAGS)
 
 clean:
-	rm -rf $(BUILD) planet_wars.zip; mkdir -p $(BUILD)
+	rm -rf $(BUILD) $(TARGET).zip debug.log; mkdir -p $(BUILD)
 
-package: main
-	mkdir -p package; cp $(SRC)main.cpp package/MyBot.cc && cp $(SRC)planet_wars.h $(SRC)planet_wars.cpp package && zip -r planet_wars.zip package; rm -rf ./package;
-
-
+package:
+	mkdir -p ./tmp;\
+  cp $(SRC)/main.cpp ./tmp/MyBot.cc;\
+  cp $(SRC)/game_state.h $(SRC)/game_state.cpp\
+    $(SRC)/planet.h $(SRC)/planet.cpp\
+    $(SRC)/fleet.h $(SRC)/fleet.cpp\
+    $(SRC)/util.h $(SRC)/util.cpp ./tmp;\
+  zip -r $(TARGET).zip ./tmp;\
+  rm -rf ./tmp;
