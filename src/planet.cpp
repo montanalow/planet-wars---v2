@@ -127,11 +127,11 @@ double pw::planet::value_in(int turns) const {
   pw::planet planet = in(turns);
   switch (planet.owner()){
     case 0:
-      return planet.growth_rate() - planet.num_ships();
+      return planet.growth_rate() - 2 * planet.num_ships();
     case 1:
       return -9999;
     case 2:
-      return 2 * planet.growth_rate() - planet.num_ships();
+      return planet.growth_rate() - planet.num_ships();
   }
 
   return 0; // failsafe
