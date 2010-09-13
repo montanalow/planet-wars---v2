@@ -1,5 +1,5 @@
 C++ = g++
-C++_FLAGS = -02 -c -o $@ $< #-fprofile-use
+C++_FLAGS = -Wall -O3 -funroll-loops -c -o $@ $< #-fprofile-use
 LINKER = g++
 LINKER_FLAGS = -o #-fprofile-use
 

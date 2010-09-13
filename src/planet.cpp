@@ -5,23 +5,13 @@
 
 #include "planet.h"
 
-pw::planet::planet(
-  int id,
-  double x,
-  double y,
-  int owner,
-  int num_ships,
-  int growth_rate,
-  pw::game_state* game_state
-) :
-  _id(id),
-  _x(x),
-  _y(y),
-  _owner(owner),
-  _num_ships(num_ships),
-  _growth_rate(growth_rate),
-  _game_state(game_state) {
-};
+pw::planet::planet(int id, double x, double y, int owner, int ships, int growth_rate, pw::game_state& game_state)
+  : _id(id), _x(x), _y(y), _owner(owner), _ships(ships), _growth_rate(growth_rate), _game_state(game_state) {
+}
+
+pw::planet::planet(const pw::planet& planet)
+  : _id(planet._id), _x(planet._x), _y(planet._y), _owner(planet._owner), _ships(planet._ships), _growth_rate(planet._growth_rate), _game_state(planet._game_state) {
+}
 
 int pw::planet::id() const {
   return _id;
@@ -39,8 +29,8 @@ int pw::planet::owner() const {
   return _owner;
 }
 
-int pw::planet::num_ships() const {
-  return _num_ships;
+int pw::planet::ships() const {
+  return _ships;
 }
 
 int pw::planet::growth_rate() const {
@@ -51,49 +41,53 @@ void pw::planet::owner(int new_owner) {
   _owner = new_owner;
 }
 
-void pw::planet::num_ships(int num_ships) {
-  _num_ships = num_ships;
+void pw::planet::ships(int ships) {
+  _ships = ships;
 }
 
 void pw::planet::add_ships(int amount) {
-  _num_ships += amount;
+  _ships += amount;
 }
 
 void pw::planet::remove_ships(int amount) {
-  _num_ships -= amount;
+  _ships -= amount;
 }
 
-pw::planet pw::planet::in(int turns) const {
+void pw::planet::game_state(pw::game_state& game_state) {
+  _game_state = game_state;
+}
+
+pw::planet pw::planet::in(int time) const {
   // figure out how many ships and who the planet belongs to in X turns
   int owner = _owner;
-  int num_ships = _num_ships;
+  int ships = _ships;
   int player_zero = 0, player_one = 0, player_two = 0;
-//  logger << "    in id: " << _id << " | owner: " << owner << " | num ships: " << num_ships << std::endl;
+//  logger << "    in id: " << _id << " | owner: " << owner << " | num ships: " << ships << std::endl;
 
   switch (owner) {
     case 0:
-      player_zero = num_ships;
+      player_zero = ships;
       break;
     case 1:
-      player_one = num_ships;
+      player_one = ships;
       break;
     case 2:
-      player_two = num_ships;
+      player_two = ships;
       break;
   }
 
-  std::vector<pw::fleet> fleets = _game_state->fleets();
-  for (int turn = 0; turn <= turns; ++turn) {
+  const std::vector<pw::fleet>& fleets = _game_state.fleets();
+  for (int t = 0; t <= time; ++t) {
     for (int i = 0; i < fleets.size(); ++i) {
       // find all fleets arriving this turn, and add up their ships
-      pw::fleet fleet = fleets[i];
-      if (fleet.turns_remaining() == turn && fleet.destination()->id() == _id) {
+      const pw::fleet& fleet = fleets[i];
+      if (fleet.time_remaining() == t && fleet.destination().id() == _id) {
         switch (fleet.owner()) {
           case 1:
-            player_one += fleet.num_ships();
+            player_one += fleet.ships();
             break;
           case 2:
-            player_two += fleet.num_ships();
+            player_two += fleet.ships();
             break;
         }
       }
@@ -104,40 +98,40 @@ pw::planet pw::planet::in(int turns) const {
       player_zero = player_zero - std::max(player_one, player_two);
       player_one = 0;
       player_two = 0;
-      num_ships = player_zero;
+      ships = player_zero;
     } else if (player_one > player_zero && player_one > player_two) {
       owner = 1;
       player_zero = 0;
       player_one = player_one - std::max(player_zero, player_two) + _growth_rate;
       player_two = 0;
-      num_ships = player_one;
+      ships = player_one;
     } else if (player_two > player_one && player_two > player_zero) {
       owner = 2;
       player_zero = 0;
       player_one = 0;
       player_two = player_two - std::max(player_zero, player_one) + _growth_rate;
-      num_ships = player_two;
+      ships = player_two;
     }
   }
 
-  return pw::planet(_id, _x, _y, owner, num_ships, _growth_rate, _game_state);
+  return pw::planet(_id, _x, _y, owner, ships, _growth_rate, _game_state);
 }
 
-double pw::planet::value_in(int turns) const {
-  pw::planet planet = in(turns);
+double pw::planet::value_in(int time) const {
+  pw::planet planet = in(time);
   switch (planet.owner()){
     case 0:
-      return (planet.growth_rate() - (4 * planet.num_ships())) - (turns * 4);
+      return (planet.growth_rate() - (4 * planet.ships())) - (time * 4);
     case 1:
-      return (planet.growth_rate() - (2 * planet.num_ships())) - (turns * 4);
+      return (planet.growth_rate() - (2 * planet.ships())) - (time * 4);
     case 2:
-      return (planet.growth_rate() - planet.num_ships()) - (turns * 4);
+      return (planet.growth_rate() - planet.ships()) - (time * 4);
   }
 
   return 0; // failsafe
 }
 
-int pw::planet::turns_to(const pw::planet& planet) const {
+int pw::planet::time_to(const pw::planet& planet) const {
   return (int) ceil(pythagorean_distance_to(planet));
 }
 
@@ -153,6 +147,21 @@ double pw::planet::pythagorean_distance_to(const pw::planet& planet) const {
   return sqrt(pythagorean_distance_squared_to(planet));
 }
 
-double pw::planet::pythagorean_distance_squared_to(const pw::planet& planet) const{
+double pw::planet::pythagorean_distance_squared_to(const pw::planet& planet) const {
   return pow(_x - planet._x, 2) + pow(_y - planet._y, 2);
+}
+
+const pw::planet& pw::planet::operator=(const pw::planet& planet) {
+  _id = planet._id;
+  _x = planet._x;
+  _y = planet._y;
+  _owner = planet._owner;
+  _ships = planet._ships;
+  _growth_rate = planet._growth_rate;
+  _game_state = planet._game_state;
+  return *this;
+}
+
+bool pw::planet::operator==(const pw::planet& planet) const {
+  return _id == planet._id;
 }
