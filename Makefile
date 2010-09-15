@@ -20,6 +20,9 @@ $(TARGET): $(OBJS)
 $(BUILD)/%.o: $(SRC)/%.cpp $(SRC)/*.h
 	$(C++) $(C++_FLAGS)
 
+tcp: $(BUILD)/tcp.o
+	$(LINKER) $(LINKER_FLAGS) tools/tcp $<
+
 clean:
 	rm -rf $(BUILD) $(TARGET).zip debug.log; mkdir -p $(BUILD)
 
