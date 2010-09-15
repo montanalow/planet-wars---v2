@@ -19,7 +19,7 @@ namespace pw {
 class planet {
 public:
   // Initializes a planet.
-  planet(int id, double x, double y, int owner, int ships, int growth_rate, pw::game_state& game_state);
+  planet(int id, double x, double y, int owner, int ships, int growth_rate, const pw::game_state* game_state);
   planet(const pw::planet& planet);
 
   // Returns the ID of this planets. Planets are numbered starting at zero.
@@ -49,11 +49,13 @@ public:
   // using the Owner(int) function! :-)
   void owner(int new_owner);
   void ships(int ships);
+  void reserve(int ships);
   void add_ships(int amount);
   void remove_ships(int amount);
-  void game_state(pw::game_state& game_state);
+  void game_state(pw::game_state* game_state);
 
   pw::planet in(int turns) const;
+  double value() const;
   double value_in(int turns) const;
 
   // This is the number of discrete time steps it takes to get between
@@ -73,10 +75,11 @@ private:
   double _x, _y;
   int _owner;
   int _ships;
+  int _reserves;
   int _reserved_ships;
   int _available_ships;
   int _growth_rate;
-  pw::game_state& _game_state;
+  const pw::game_state* _game_state;
 };
 
 }

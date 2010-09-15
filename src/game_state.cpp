@@ -80,10 +80,9 @@ std::string pw::game_state::to_string() const {
 
 void pw::game_state::issue_order(pw::planet& source, pw::planet& destination, int ships) {
   source.remove_ships(ships);
-  _fleets.push_back(pw::fleet(1, ships, source, destination, source.time_to(destination), source.time_to(destination), *this));
+  _fleets.push_back(pw::fleet(1, ships, source, destination, source.time_to(destination), source.time_to(destination), this));
+  _allied_fleets.push_back(_fleets.back());
   std::cout << source.id() << " " << destination.id() << " " << ships << std::endl;
-  pw::logger::log << source.id() << " " << destination.id() << " " << ships << std::endl;
-  pw::logger::log.flush();
 }
 
 void pw::game_state::clear() {
@@ -156,7 +155,7 @@ int pw::game_state::parse_game_state_data(const std::string& game_state_data) {
       int owner = atoi(tokens[3].c_str());
       int ships = atoi(tokens[4].c_str());
       int growth_rate = atoi(tokens[5].c_str());
-      _planets.push_back(pw::planet(planet_id++, x, y, owner, ships, growth_rate, *this));
+      _planets.push_back(pw::planet(planet_id++, x, y, owner, ships, growth_rate, this));
     } else if (tokens[0] == "F") {
       // create a fleet
       if (tokens.size() != 7) {
@@ -171,7 +170,7 @@ int pw::game_state::parse_game_state_data(const std::string& game_state_data) {
       int destination_id = atoi(tokens[4].c_str());
       int total_trip_time = atoi(tokens[5].c_str());
       int time_remaining = atoi(tokens[6].c_str());
-      _fleets.push_back(pw::fleet(owner, ships, _planets[source_id], _planets[destination_id], total_trip_time, time_remaining, *this));
+      _fleets.push_back(pw::fleet(owner, ships, _planets[source_id], _planets[destination_id], total_trip_time, time_remaining, this));
     } else {
       return 0;
     }
@@ -183,13 +182,18 @@ int pw::game_state::parse_game_state_data(const std::string& game_state_data) {
 void pw::game_state::finish_turn() const {
   std::cout << "go" << std::endl;
   std::cout.flush();
-  pw::logger::log.flush();
 }
 
 pw::game_state& pw::game_state::operator=(const pw::game_state& game_state) {
   // deep copy planets and fleets
   _planets.assign(game_state._planets.begin(), game_state._planets.end());
+  for (std::vector<pw::planet>::iterator planet = _planets.begin(); planet < _planets.end(); ++planet) {
+    planet->game_state(this);
+  }
   _fleets.assign(game_state._fleets.begin(), game_state._fleets.end());
+  for (std::vector<pw::fleet>::iterator fleet = _fleets.begin(); fleet < _fleets.end(); ++fleet) {
+    fleet->game_state(this);
+  }
   return *this;
 }
 
@@ -252,7 +256,7 @@ pw::game_state& pw::game_state::operator++() {
   std::vector<pw::fleet> next_fleets;
   for (std::vector<pw::fleet>::iterator fleet = _fleets.begin(); fleet < _fleets.end(); ++fleet) {
     if (fleet->time_remaining() > 1) { // if the fleet has time left on it
-      next_fleets.push_back(pw::fleet(fleet->owner(), fleet->ships(), _planets[fleet->source().id()], _planets[fleet->destination().id()], fleet->total_trip_time(), fleet->time_remaining() - 1, *this)); // copy it to the next turn
+      next_fleets.push_back(pw::fleet(fleet->owner(), fleet->ships(), _planets[fleet->source().id()], _planets[fleet->destination().id()], fleet->total_trip_time(), fleet->time_remaining() - 1, this)); // copy it to the next turn
     }
   }
   _fleets.swap(next_fleets);

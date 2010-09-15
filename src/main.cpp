@@ -7,44 +7,35 @@
 #include "util.h"
 
 void make_move(pw::game_state& game_state) {
-  std::vector<pw::planet> sources = game_state.planets();
+  std::vector<pw::planet> sources = game_state.allied_planets();
   std::vector<pw::planet> destinations = game_state.planets();
   for (size_t i = 0; i < sources.size(); ++i) {
     pw::planet& source = sources[i];
-    pw::logger::log << "source: " << source.id() << "\n";
-    pw::logger::log.flush();
-    if (source.owner() != 1) {
-      continue;
-    }
-    while (source.ships() > 0) {
-      pw::logger::log << " ships:" << source.ships() << "\n";
-      pw::logger::log.flush();
-      
+//    std::cerr << "source: " << source.id() << "\n";
+    while (source.ships() > 1) {
       pw::planet* destination = NULL;
-      double highest_value = -9999999;
+      double highest_value = 0;
 
       // find the destination with the highest value
       for (size_t j = 0; j < destinations.size(); ++j) {
         pw::planet& planet = destinations[j];
-        double value = planet.value_in(source.time_to(planet));
-        if (value > highest_value) {
+        double time = source.time_to(planet);
+        pw::planet planet_at_arrival = planet.in(time);
+//        std::cerr << "  planet:" << planet.id() << " time: " << time << "\n";
+        if (planet_at_arrival.value() / (time / 2) > highest_value) {
           destination = &planet;
-          highest_value = value;
+          highest_value = planet_at_arrival.value() / (time / 2);
         }
       }
-      pw::logger::log << " a:" << source.ships() << "\n";
-      pw::logger::log.flush();
 
-      // do we have enough shipsfind the min ships we need to send
-      pw::planet d = destination->in(source.time_to(*destination));
-      int ships = std::min(source.ships(), d.ships() + 1);
+      // find the min ships we need to send
       if (destination == NULL || destination->id() == source.id()) {
-        pw::logger::log << "break\n";
-        pw::logger::log.flush();
+//        std::cerr << " no destination\n:";
         break;
       } else {
-        pw::logger::log << "source: " << source.id() << " | destination: " << destination->id() << "\n";
-        pw::logger::log.flush();
+//        std::cerr << "destination: " << destination->id() << "\n";
+        pw::planet d = destination->in(source.time_to(*destination));
+        int ships = std::min(source.ships() - 1, d.ships() + 1);
         game_state.issue_order(source, *destination, ships);
       }
     }
@@ -52,12 +43,31 @@ void make_move(pw::game_state& game_state) {
 
 
 
-  // find objectives for all known future game states
-  // 1) calculate future game states
+//  // 1) calculate future game states
 //  std::vector<pw::game_state> game_states;
 //  game_states.push_back(game_state);
-//  while(game_state._max_fleet_time_remaining > 0) {
+//  while(game_state.max_fleet_time_remaining() > 0) {
 //    game_states.push_back(++game_state);
+//  }
+//
+//  // 2) find the largest forseable change in production for the cheapest ships in the closest time
+//  pw::planet* target = NULL;
+//  double target_value = 0;
+//  int time = 0;
+//  for (std::vector<pw::game_state>::const_iterator game_state = game_states.begin(); game_state < game_states.end(); ++game_state) {
+//    for (std::vector<pw::planet>::const_iterator planet = game_state->allied_planets().begin(); planet < game_state->allied_planets().end(); ++planet) {
+//      if (planet->owner() != 1) {
+//        if (planet->growth_rate() / (planet->ships() * time + 1.0) > target_value) {
+//          target_value = planet->growth_rate() / (planet->ships() * time + 1.0); // TODO denominator should be sum(source ships * source time to this destination)
+//          target = &(*planet);
+//        }
+//      }
+//    }
+//    ++time;
+//  }
+//
+//  if (target) {
+//
 //  }
 //
 //  for (size_t time = 0; time < game_states.size(); ++time) {
@@ -75,7 +85,7 @@ void make_move(pw::game_state& game_state) {
 //          cost = planet->ships() * time;
 //          break;
 //      }
-//      double target_value = planet->growth_rate() * (planet->owner() + 1) - time;
+//      double value = planet->growth_rate() * planet->owner() * (game_state.max_fleet_time_remaining() - time);
 //    }
 //  }
 }
@@ -83,7 +93,7 @@ void make_move(pw::game_state& game_state) {
 // This is just the main game loop that takes care of communicating with the
 // game engine for you. You don't have to understand or change the code below.
 int main(int argc, char *argv[]) {
-  pw::logger::log << "startup\n";
+  //std::cerr << "startup\n";
   std::string current_line;
   std::string game_state_data;
   while (true) {

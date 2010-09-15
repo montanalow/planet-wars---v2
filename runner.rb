@@ -1,10 +1,10 @@
 #! /usr/local/bin/ruby
 maps = Dir.entries "./maps"
 bots = Dir.entries "./example_bots"
-map_limit = 5
-bot_limit = 10
+map_limit = 100
+bot_limit = 15
 
-maps = maps.select {|m| m[-4..-1] == ".txt"}[0...map_limit]
+maps = maps.select {|m| m[-4..-1] == ".txt"}.sort{|a,b| a[3..-1].to_i <=> b[3..-1].to_i}[0...map_limit]
 bots = bots.select {|b| b[-4..-1] == ".jar"}[0...bot_limit]
 
 wins = 0
@@ -17,8 +17,10 @@ m_results = Hash.new {|hash,key| hash[key] = {:wins => 0, :win_moves => 0, :loss
 maps.each do |m|
   bots.each do |b|
 #    next if m == "huge-room.txt" || m.include?("test") || m.include?( "profile" )
-    debug = `java -jar tools/PlayGame.jar maps/#{m} 1000 1000 log.txt build/planet_wars "java -jar example_bots/#{b}" 2>&1`.split "\n"
-    result = debug[-2]
+    `java -jar tools/PlayGame-1.2.jar maps/#{m} 1000 1000 log.txt build/planet_wars "java -jar example_bots/#{b}" 2> runner.log`
+    debug = File.read("runner.log").split("\n")
+    File.delete "runner.log"
+    result = debug[-1]
     print "1 vs #{b} @ #{m}: "
     if result == "Player 1 Wins!"
       m_results[m][:wins] += 1
@@ -36,8 +38,10 @@ maps.each do |m|
       puts "draw (#{debug.size - 1} moves)"
     end
 
-    debug = `java -jar tools/PlayGame.jar maps/#{m} 1000 1000 log.txt "java -jar example_bots/#{b}" build/planet_wars 2>&1`.split "\n"
-    result = debug[-2]
+    `java -jar tools/PlayGame-1.2.jar maps/#{m} 1000 1000 log.txt "java -jar example_bots/#{b}" build/planet_wars 2> runner.log`
+    debug = File.read("runner.log").split("\n")
+    File.delete "runner.log"
+    result = debug[-1]
     print "2 vs #{b} @ #{m}: "
     if result == "Player 2 Wins!"
       m_results[m][:wins] += 1

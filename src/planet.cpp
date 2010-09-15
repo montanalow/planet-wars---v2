@@ -5,7 +5,7 @@
 
 #include "planet.h"
 
-pw::planet::planet(int id, double x, double y, int owner, int ships, int growth_rate, pw::game_state& game_state)
+pw::planet::planet(int id, double x, double y, int owner, int ships, int growth_rate, const pw::game_state* game_state)
   : _id(id), _x(x), _y(y), _owner(owner), _ships(ships), _growth_rate(growth_rate), _game_state(game_state) {
 }
 
@@ -45,6 +45,11 @@ void pw::planet::ships(int ships) {
   _ships = ships;
 }
 
+void pw::planet::reserve(int ships) {
+  _ships -= ships;
+  _reserves += ships;
+}
+
 void pw::planet::add_ships(int amount) {
   _ships += amount;
 }
@@ -53,7 +58,7 @@ void pw::planet::remove_ships(int amount) {
   _ships -= amount;
 }
 
-void pw::planet::game_state(pw::game_state& game_state) {
+void pw::planet::game_state(pw::game_state* game_state) {
   _game_state = game_state;
 }
 
@@ -62,7 +67,6 @@ pw::planet pw::planet::in(int time) const {
   int owner = _owner;
   int ships = _ships;
   int player_zero = 0, player_one = 0, player_two = 0;
-//  logger << "    in id: " << _id << " | owner: " << owner << " | num ships: " << ships << std::endl;
 
   switch (owner) {
     case 0:
@@ -76,8 +80,9 @@ pw::planet pw::planet::in(int time) const {
       break;
   }
 
-  const std::vector<pw::fleet>& fleets = _game_state.fleets();
+  const std::vector<pw::fleet>& fleets = _game_state->fleets();
   for (int t = 0; t <= time; ++t) {
+//    std::cerr << "    time:" << t << "\n";
     for (int i = 0; i < fleets.size(); ++i) {
       // find all fleets arriving this turn, and add up their ships
       const pw::fleet& fleet = fleets[i];
@@ -113,22 +118,25 @@ pw::planet pw::planet::in(int time) const {
       ships = player_two;
     }
   }
-
+//  std::cerr << "  return in\n";
   return pw::planet(_id, _x, _y, owner, ships, _growth_rate, _game_state);
 }
 
-double pw::planet::value_in(int time) const {
-  pw::planet planet = in(time);
-  switch (planet.owner()){
+double pw::planet::value() const {
+  switch (_owner){
     case 0:
-      return (planet.growth_rate() - (4 * planet.ships())) - (time * 4);
+      return (double) _growth_rate / _ships;
     case 1:
-      return (planet.growth_rate() - (2 * planet.ships())) - (time * 4);
+      return 0;
     case 2:
-      return (planet.growth_rate() - planet.ships()) - (time * 4);
+      return (double) (8 * _growth_rate) / _ships;
   }
 
   return 0; // failsafe
+}
+
+double pw::planet::value_in(int time) const {
+  return value() / time;
 }
 
 int pw::planet::time_to(const pw::planet& planet) const {

@@ -20,7 +20,7 @@ namespace pw {
 class fleet {
 public:
   // Initializes a fleet.
-  fleet(int owner, int ships, pw::planet& source, pw::planet& destination, int total_trip_time, int time_remaining, pw::game_state& game_state);
+  fleet(int owner, int ships, pw::planet& source, pw::planet& destination, int total_trip_time, int time_remaining, const pw::game_state* game_state);
 
   // Returns the playerID of the owner of the fleet. Your player ID is always
   // 1. So if the owner is 1, you own the fleet. If the owner is 2 or some
@@ -48,7 +48,7 @@ public:
   void time_remaining(int time_remaining);
   void source(pw::planet& source);
   void destination(pw::planet& destination);
-  void game_state(const pw::game_state& game_state);
+  void game_state(const pw::game_state* game_state);
 
   const pw::fleet& operator=(const pw::fleet& fleet);
 
@@ -59,7 +59,7 @@ private:
   pw::planet& _destination;
   int _total_trip_time;
   int _time_remaining;
-  pw::game_state& _game_state;
+  const pw::game_state* _game_state;
 };
 
 }
