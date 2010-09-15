@@ -9,22 +9,60 @@
 #include "game_state.h"
 #include "util.h"
 
-pw::game_state::game_state(const std::string& game_state_data)
-  : _planets(), _fleets() {
+pw::game_state::game_state(const std::string& game_state_data) :
+  _planets(),
+  _fleets(),
+  _allied_planets(),
+  _neutral_planets(),
+  _enemy_planets(),
+  _allied_fleets(),
+  _enemy_fleets(),
+  _max_fleet_time_remaining(0) {
   parse_game_state_data(game_state_data);
 }
 
-pw::game_state::game_state(const pw::game_state& game_state)
-  // deep copy planets and fleets
-  : _planets(game_state._planets.begin(), game_state._planets.end()), _fleets(game_state._fleets.begin(), game_state._fleets.end()) {
-}
+pw::game_state::game_state(const pw::game_state& game_state) :
+  _planets(game_state._planets.begin(), game_state._planets.end()),
+  _fleets(game_state._fleets.begin(), game_state._fleets.end()),
+  _allied_planets(game_state._allied_planets.begin(), game_state._allied_planets.end()),
+  _neutral_planets(game_state._neutral_planets.begin(), game_state._neutral_planets.end()),
+  _enemy_planets(game_state._enemy_planets.begin(), game_state._enemy_planets.end()),
+  _allied_fleets(game_state._allied_fleets.begin(), game_state._allied_fleets.end()),
+  _enemy_fleets(game_state._enemy_fleets.begin(), game_state._enemy_fleets.end()),
+  _max_fleet_time_remaining(0) { }
 
+// data
 const std::vector<pw::planet>& pw::game_state::planets() const {
   return _planets;
 }
 
 const std::vector<pw::fleet>& pw::game_state::fleets() const {
   return _fleets;
+}
+
+// indexes
+const std::vector<pw::planet>& pw::game_state::allied_planets() const {
+  return _allied_planets;
+}
+
+const std::vector<pw::planet>& pw::game_state::neutral_planets() const {
+  return _neutral_planets;
+}
+
+const std::vector<pw::planet>& pw::game_state::enemy_planets() const {
+  return _enemy_planets;
+}
+
+const std::vector<pw::fleet>& pw::game_state::allied_fleets() const {
+  return _allied_fleets;
+}
+
+const std::vector<pw::fleet>& pw::game_state::enemy_fleets() const {
+  return _enemy_fleets;
+}
+
+int pw::game_state::max_fleet_time_remaining() const{
+  return _max_fleet_time_remaining;
 }
 
 std::string pw::game_state::to_string() const {
@@ -49,14 +87,54 @@ void pw::game_state::issue_order(pw::planet& source, pw::planet& destination, in
 }
 
 void pw::game_state::clear() {
+  // clear data
   _planets.clear();
   _fleets.clear();
+}
+
+void pw::game_state::index() {
+  // clear planet indexes
+  _allied_planets.clear();
+  _neutral_planets.clear();
+  _enemy_planets.clear();
+  // index planets
+  for (std::vector<pw::planet>::iterator planet = _planets.begin(); planet < _planets.end(); ++planet) {
+    switch (planet->owner()) {
+      case 0:
+        _neutral_planets.push_back(*planet);
+        break;
+      case 1:
+        _allied_planets.push_back(*planet);
+        break;
+      case 2:
+        _enemy_planets.push_back(*planet);
+        break;
+    }
+  }
+
+  // clear fleet indexes
+  _allied_fleets.clear();
+  _enemy_fleets.clear();
   _max_fleet_time_remaining = 0;
+  // index fleets
+  for (std::vector<pw::fleet>::iterator fleet = _fleets.begin(); fleet < _fleets.end(); ++fleet) {
+    switch (fleet->owner()) {
+      case 1:
+        _allied_fleets.push_back(*fleet);
+        break;
+      case 2:
+        _enemy_fleets.push_back(*fleet);
+        break;
+    }
+    if (fleet->time_remaining() > _max_fleet_time_remaining) {
+      _max_fleet_time_remaining = fleet->time_remaining();
+    }
+  }
 }
 
 int pw::game_state::parse_game_state_data(const std::string& game_state_data) {
   clear();
-  
+
   std::vector<std::string> lines = string_util::tokenize(game_state_data, "\n");
   int planet_id = 0;
   for (unsigned int i = 0; i < lines.size(); ++i) {
@@ -86,18 +164,19 @@ int pw::game_state::parse_game_state_data(const std::string& game_state_data) {
       }
       int owner = atoi(tokens[1].c_str());
       int ships = atoi(tokens[2].c_str());
+      if (ships < 1) {
+        continue;
+      }
       int source_id = atoi(tokens[3].c_str());
       int destination_id = atoi(tokens[4].c_str());
       int total_trip_time = atoi(tokens[5].c_str());
       int time_remaining = atoi(tokens[6].c_str());
       _fleets.push_back(pw::fleet(owner, ships, _planets[source_id], _planets[destination_id], total_trip_time, time_remaining, *this));
-      if (time_remaining > _max_fleet_time_remaining) {
-        _max_fleet_time_remaining = _fleets.back().time_remaining();
-      }
     } else {
       return 0;
     }
   }
+  index();
   return 1;
 }
 
@@ -118,7 +197,7 @@ pw::game_state& pw::game_state::operator++() {
   // advance each planet to the next turn (in place)
   for (std::vector<pw::planet>::iterator planet = _planets.begin(); planet < _planets.end(); ++planet) {
     // add newly produced ships to player controlled planets
-    if( planet->owner() > 0 ) {
+    if (planet->owner() > 0) {
       planet->add_ships(planet->growth_rate());
     }
 
@@ -138,7 +217,7 @@ pw::game_state& pw::game_state::operator++() {
 
     // total up all ships arriving on the next turn
     for (std::vector<pw::fleet>::iterator fleet = _fleets.begin(); fleet < _fleets.end(); ++fleet) {
-      if(fleet->destination() == (*planet) && fleet->time_remaining() == 1) {
+      if (fleet->destination() == (*planet) && fleet->time_remaining() == 1) {
         switch (fleet->owner()) {
           case 1:
             allied_ships += fleet->ships();
@@ -172,17 +251,17 @@ pw::game_state& pw::game_state::operator++() {
   // copy all fleets that don't arrive somewhere next turn (since battles have already been taken care of), and update their time_remaining
   std::vector<pw::fleet> next_fleets;
   for (std::vector<pw::fleet>::iterator fleet = _fleets.begin(); fleet < _fleets.end(); ++fleet) {
-    if(fleet->time_remaining() > 1) { // if the fleet has time left on it
+    if (fleet->time_remaining() > 1) { // if the fleet has time left on it
       next_fleets.push_back(pw::fleet(fleet->owner(), fleet->ships(), _planets[fleet->source().id()], _planets[fleet->destination().id()], fleet->total_trip_time(), fleet->time_remaining() - 1, *this)); // copy it to the next turn
     }
   }
   _fleets.swap(next_fleets);
-  --_max_fleet_time_remaining;
+  index();
   return *this;
 }
 
 pw::game_state pw::game_state::operator++(int) {
   pw::game_state previous(*this);
-  ++*this;
+  ++ * this;
   return previous;
 }
