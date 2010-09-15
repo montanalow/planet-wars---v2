@@ -1,4 +1,10 @@
 #! /usr/local/bin/ruby
+if ARGV = "tcp"
+  while true do
+    puts `./tools/tcp 213.3.30.106 9999 montanalow ./build/planet_wars`
+  end
+end
+
 maps = Dir.entries "./maps"
 bots = Dir.entries "./example_bots"
 map_limit = 100
