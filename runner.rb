@@ -1,7 +1,17 @@
 #! /usr/local/bin/ruby
-if ARGV = "tcp"
-  while true do
+running = true
+trap "INT" do
+  running = false
+end
+
+if ARGV[0] == "tcp"
+  while running do
     puts `./tools/tcp 213.3.30.106 9999 montanalow ./build/planet_wars`
+    print "next match in"
+    (1...10).each do |i|
+      print " #{i}"
+      sleep 1
+    end
   end
 end
 
@@ -22,8 +32,9 @@ win_moves = 0
 m_results = Hash.new {|hash,key| hash[key] = {:wins => 0, :win_moves => 0, :losses => 0, :draws => 0}}
 maps.each do |m|
   bots.each do |b|
-#    next if m == "huge-room.txt" || m.include?("test") || m.include?( "profile" )
+    next unless running
     `java -jar tools/PlayGame-1.2.jar maps/#{m} 1000 1000 log.txt build/planet_wars "java -jar example_bots/#{b}" 2> runner.log`
+    next unless running
     debug = File.read("runner.log").split("\n")
     File.delete "runner.log"
     result = debug[-1]
@@ -43,8 +54,8 @@ maps.each do |m|
       collisions += 1
       puts "draw (#{debug.size - 1} moves)"
     end
-
     `java -jar tools/PlayGame-1.2.jar maps/#{m} 1000 1000 log.txt "java -jar example_bots/#{b}" build/planet_wars 2> runner.log`
+    next unless running
     debug = File.read("runner.log").split("\n")
     File.delete "runner.log"
     result = debug[-1]

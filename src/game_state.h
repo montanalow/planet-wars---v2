@@ -23,20 +23,20 @@ public:
   game_state(const game_state& game_state);
   
   // Returns a list of all the planets.
-  const std::vector<pw::planet>& planets() const;
+  std::vector<pw::planet*>& planets();
   // Return a list of planets owned by the player
-  const std::vector<pw::planet>& allied_planets() const;
+  std::vector<pw::planet*>& allied_planets();
   // Return a list of planets owned by the neurtal party
-  const std::vector<pw::planet>& neutral_planets() const;
+  std::vector<pw::planet*>& neutral_planets();
   // Return a list of planets owned by the enemy
-  const std::vector<pw::planet>& enemy_planets() const;
+  std::vector<pw::planet*>& enemy_planets();
 
   // Return a list of all the fleets.
-  const std::vector<pw::fleet>& fleets() const;
+  std::vector<pw::fleet*>& fleets();
   // Return a list of fleets owned by the player
-  const std::vector<pw::fleet>& allied_fleets() const;
+  std::vector<pw::fleet*>& allied_fleets();
   // Return a list of fleets owned by the enemy
-  const std::vector<pw::fleet>& enemy_fleets() const;
+  std::vector<pw::fleet*>& enemy_fleets();
 
   int max_fleet_time_remaining() const;
   
@@ -44,16 +44,19 @@ public:
   // conforms to the Point-in-Time format from the project Wiki.
   std::string to_string() const;
 
+  void take_turn();
+
   // Sends an order to the game engine. The order is to send ships ships
   // from source_planet to destination_planet. The order must be valid, or
   // else your bot will get kicked and lose the game. For example, you must own
   // source_planet, and you can't send more ships than you actually have on
   // that planet.
-  void issue_order(pw::planet& source, pw::planet& destination, int ships);
+  void issue_order(int source_id, int destination_id, int ships);
+  void reserve(int source_id, int ships);
 
   // Sends a message to the game engine letting it know that you're done
   // issuing orders for now.
-  void finish_turn() const;
+  void finish_turn();
 
   game_state operator++(int); // postfix
   game_state& operator++(); // prefix
@@ -68,15 +71,15 @@ private:
   int parse_game_state_data(const std::string& game_state_data);
 
   // Store all the planets and fleets.
-  std::vector<pw::planet> _planets;
-  std::vector<pw::fleet> _fleets;
+  std::vector<pw::planet*> _planets;
+  std::vector<pw::fleet*> _fleets;
 
   // indexes
-  std::vector<pw::planet> _allied_planets;
-  std::vector<pw::planet> _neutral_planets;
-  std::vector<pw::planet> _enemy_planets;
-  std::vector<pw::fleet> _allied_fleets;
-  std::vector<pw::fleet> _enemy_fleets;
+  std::vector<pw::planet*> _allied_planets;
+  std::vector<pw::planet*> _neutral_planets;
+  std::vector<pw::planet*> _enemy_planets;
+  std::vector<pw::fleet*> _allied_fleets;
+  std::vector<pw::fleet*> _enemy_fleets;
   int _max_fleet_time_remaining;
 };
 

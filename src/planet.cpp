@@ -5,7 +5,7 @@
 
 #include "planet.h"
 
-pw::planet::planet(int id, double x, double y, int owner, int ships, int growth_rate, const pw::game_state* game_state)
+pw::planet::planet(int id, double x, double y, int owner, int ships, int growth_rate, pw::game_state* game_state)
   : _id(id), _x(x), _y(y), _owner(owner), _ships(ships), _growth_rate(growth_rate), _game_state(game_state) {
 }
 
@@ -46,8 +46,9 @@ void pw::planet::ships(int ships) {
 }
 
 void pw::planet::reserve(int ships) {
-  _ships -= ships;
+  ships = std::min(_ships, ships);
   _reserves += ships;
+  _ships -= ships;
 }
 
 void pw::planet::add_ships(int amount) {
@@ -62,61 +63,82 @@ void pw::planet::game_state(pw::game_state* game_state) {
   _game_state = game_state;
 }
 
+const pw::planet* pw::planet::closest_source() const{
+  const pw::planet* source = NULL;
+  double closest_distance = -1;
+  for (std::vector<pw::planet*>::iterator planet = _game_state->planets().begin(); planet < _game_state->planets().end(); ++planet) {
+    if ((*planet)->owner() == 1 && (*planet)->ships() > 1 && (closest_distance == -1 || distance_to(**planet) < closest_distance)) {
+      source = *planet;
+      closest_distance = distance_to(**planet);
+    }
+  }
+  return source;
+}
+
 pw::planet pw::planet::in(int time) const {
-  // figure out how many ships and who the planet belongs to in X turns
   int owner = _owner;
   int ships = _ships;
-  int player_zero = 0, player_one = 0, player_two = 0;
-
+  
+  // initialize ships on the planet
+  int neutral_ships = 0, allied_ships = 0, enemy_ships = 0;
   switch (owner) {
     case 0:
-      player_zero = ships;
+      neutral_ships = _ships;
       break;
     case 1:
-      player_one = ships;
+      allied_ships = _ships;
       break;
     case 2:
-      player_two = ships;
+      enemy_ships = _ships;
       break;
   }
 
-  const std::vector<pw::fleet>& fleets = _game_state->fleets();
   for (int t = 0; t <= time; ++t) {
-//    std::cerr << "    time:" << t << "\n";
-    for (int i = 0; i < fleets.size(); ++i) {
-      // find all fleets arriving this turn, and add up their ships
-      const pw::fleet& fleet = fleets[i];
-      if (fleet.time_remaining() == t && fleet.destination().id() == _id) {
-        switch (fleet.owner()) {
+    // add newly produced ships to player controlled planets
+    switch (owner) {
+      case 1:
+        allied_ships += _growth_rate;
+        break;
+      case 2:
+        enemy_ships += _growth_rate;
+        break;
+    }
+
+    // total up all ships arriving on the next turn
+    for (std::vector<pw::fleet*>::iterator fleet = _game_state->fleets().begin(); fleet < _game_state->fleets().end(); ++fleet) {
+      if ((*fleet)->destination()->id() == _id && (*fleet)->time_remaining() == t) {
+        switch ((*fleet)->owner()) {
           case 1:
-            player_one += fleet.ships();
+            allied_ships += (*fleet)->ships();
             break;
           case 2:
-            player_two += fleet.ships();
+            enemy_ships += (*fleet)->ships();
             break;
         }
       }
     }
 
-    if (player_zero > player_one && player_zero > player_two) {
+    // set the owner of the planet, and the number of ships remaining
+    if (neutral_ships > allied_ships && neutral_ships > enemy_ships) {
+      // neutral powers win
+      ships = neutral_ships = neutral_ships - std::max(allied_ships, enemy_ships);
+      allied_ships = enemy_ships = 0;
       owner = 0;
-      player_zero = player_zero - std::max(player_one, player_two);
-      player_one = 0;
-      player_two = 0;
-      ships = player_zero;
-    } else if (player_one > player_zero && player_one > player_two) {
+    } else if (allied_ships > neutral_ships && allied_ships > enemy_ships) {
+      // allies win
+      ships = allied_ships = allied_ships - std::max(neutral_ships, enemy_ships);
+      neutral_ships = enemy_ships = 0;
       owner = 1;
-      player_zero = 0;
-      player_one = player_one - std::max(player_zero, player_two) + _growth_rate;
-      player_two = 0;
-      ships = player_one;
-    } else if (player_two > player_one && player_two > player_zero) {
+    } else if (enemy_ships > allied_ships && enemy_ships > neutral_ships) {
+      // enemies win
+      ships = enemy_ships = enemy_ships - std::max(neutral_ships, allied_ships);
+      neutral_ships = allied_ships = 0;
       owner = 2;
-      player_zero = 0;
-      player_one = 0;
-      player_two = player_two - std::max(player_zero, player_one) + _growth_rate;
-      ships = player_two;
+    } else {
+      // no clear winner, all ships are annihilated and control remains the same
+      ships = neutral_ships = allied_ships = enemy_ships = 0;
     }
+//    std::cerr << "  planet: " << _id <<  " in: " << t << " owner: " << owner << " ships: " << ships << "\n";
   }
 //  std::cerr << "  return in\n";
   return pw::planet(_id, _x, _y, owner, ships, _growth_rate, _game_state);
@@ -129,7 +151,7 @@ double pw::planet::value() const {
     case 1:
       return 0;
     case 2:
-      return (double) (8 * _growth_rate) / _ships;
+      return (double) (2 * _growth_rate) / _ships;
   }
 
   return 0; // failsafe

@@ -19,7 +19,7 @@ namespace pw {
 class planet {
 public:
   // Initializes a planet.
-  planet(int id, double x, double y, int owner, int ships, int growth_rate, const pw::game_state* game_state);
+  planet(int id, double x, double y, int owner, int ships, int growth_rate, pw::game_state* game_state);
   planet(const pw::planet& planet);
 
   // Returns the ID of this planets. Planets are numbered starting at zero.
@@ -57,6 +57,7 @@ public:
   pw::planet in(int turns) const;
   double value() const;
   double value_in(int turns) const;
+  const pw::planet* closest_source() const;
 
   // This is the number of discrete time steps it takes to get between
   // the two planets.  Returns the distance between two planets, rounded up
@@ -79,7 +80,7 @@ private:
   int _reserved_ships;
   int _available_ships;
   int _growth_rate;
-  const pw::game_state* _game_state;
+  pw::game_state* _game_state;
 };
 
 }
