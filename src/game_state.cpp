@@ -74,11 +74,11 @@ int pw::game_state::max_fleet_time_remaining() const {
 std::string pw::game_state::to_string() const {
   std::stringstream s;
   for (unsigned int i = 0; i < _planets.size(); ++i) {
-    const pw::planet& planet = *_planets[i];
+    pw::planet& planet = *_planets[i];
     s << "P " << planet.x() << " " << planet.y() << " " << planet.owner() << " " << planet.ships() << " " << planet.growth_rate() << std::endl;
   }
   for (unsigned int i = 0; i < _fleets.size(); ++i) {
-    const fleet& f = *_fleets[i];
+    fleet& f = *_fleets[i];
     s << "F " << f.owner() << " " << f.ships() << " " << f.source()->id() << " " << f.destination()->id() << " " << f.total_trip_time() << " " << f.time_remaining() << std::endl;
   }
   return s.str();
@@ -91,17 +91,16 @@ void pw::game_state::issue_order(int source_id, int destination_id, int ships) {
 //    std::cerr << "*********** ERROR: ordered too many ships ******************";
     return;
   }
+  if (ships < 1){
+//    std::cerr << "*********** ERROR: ordered too few ships ******************";
+    return;
+  }
   pw::fleet* fleet = new pw::fleet(1, ships, source, destination, source->time_to(*destination), source->time_to(*destination), this);
   source->remove_ships(fleet->ships());
   _fleets.push_back(fleet);
   _allied_fleets.push_back(fleet);
   std::cout << source_id << " " << destination_id << " " << ships << std::endl;
 //  std::cerr << "order | source: " << source_id << " destination: " << destination_id << " ships: " << ships << std::endl;
-}
-
-void pw::game_state::reserve(int source_id, int ships) {
-  _planets[source_id]->reserve(ships);
-//  std::cerr << "reserve | source: " << source_id << " ships: " << ships << std::endl;
 }
 
 void pw::game_state::clear() {
@@ -322,11 +321,11 @@ void pw::game_state::take_turn() {
         if (planet_after_invasion.owner() == 1) {
           // reserve only as many ships as it takes to defend
 //          std::cerr << "  reserving some\n";
-          reserve(planet_after_invasion.id(), std::max(0, enemy_fleet->destination()->ships() - planet_after_invasion.ships()));
+          enemy_fleet->destination()->reserve(enemy_fleet->destination()->ships() - planet_after_invasion.ships());
         } else {
           // reserve everything
 //          std::cerr << "  reserving everything\n";
-          reserve(planet_after_invasion.id(), enemy_fleet->destination()->ships());
+          enemy_fleet->destination()->reserve(enemy_fleet->destination()->ships());
         }
       } else {
 //        std::cerr << "  not an invader | source: " << enemy_fleet->source()->id() << " destination: " << enemy_fleet->destination()->id() << " ships: " << enemy_fleet->ships() << "\n";
@@ -348,9 +347,14 @@ void pw::game_state::take_turn() {
 //        std::cerr << "  after invasion | owner: " << planet_after_invasion.owner() << " ships: " << planet_after_invasion.ships() << "\n";
         if (planet_after_invasion.owner() != 1) {
           // find backup
+          double min_distance = 0;
           while (true) {
-            const pw::planet* source = planet_after_invasion.closest_source();
+            const pw::planet* source = planet_after_invasion.closest_ally(min_distance);
             if (source) {
+              min_distance = source->distance_to(*enemy_fleet->destination());
+              if (source->ships() < 2 ){
+                continue;
+              }
               int time = source->time_to(*enemy_fleet->destination());
               if (time > enemy_fleet->time_remaining()) {
                 // oh noes the planet is lost
@@ -394,20 +398,15 @@ void pw::game_state::take_turn() {
 
   // reserve ships against future invasions
 //  std::cerr << "*** Reserve against closest enemy ***\n";
-  for (int g = 5; g > 0; --g) {
-    for (int i = 0; i < _allied_planets.size(); ++i ){
-      // iterate over allied planets largest to smallest
-      pw::planet* planet = _allied_planets[i];
-      if (planet->growth_rate() != g ) {
-        continue;
-      }
+  for (int i = 0; i < _enemy_planets.size(); ++i ){
+    // iterate over allied planets largest to smallest
+    pw::planet* planet = _enemy_planets[i];
 
-      pw::planet* largest_enemy = planet->largest_enemy();
-      if (largest_enemy) {
-        int time = planet->time_to(*largest_enemy);
-//        std::cerr << " reserving | planet: " << planet->id() << " ships: " << planet->ships() << " growth_rate: " << planet->growth_rate() << " | enemy ships: " << closest_enemy->ships() << " distance: " << time << "\n";
-        planet->reserve(largest_enemy->ships() - (planet->growth_rate() * time));
-      }
+    pw::planet* closest_ally = planet->closest_ally();
+    if (closest_ally) {
+      int time = planet->time_to(*closest_ally);
+//      std::cerr << " reserving | planet: " << closest_ally->id() << " ships: " << closest_ally->ships() << " growth_rate: " << closest_ally->growth_rate() << " | enemy ships: " << planet->ships() << " distance: " << time << "\n";
+      closest_ally->reserve(planet->ships() - (closest_ally->growth_rate() * time));
     }
   }
 

@@ -1,6 +1,6 @@
 #include "fleet.h"
 
-pw::fleet::fleet(int owner, int ships, const pw::planet* source, const pw::planet* destination, int total_trip_time, int time_remaining, pw::game_state* game_state) :
+pw::fleet::fleet(int owner, int ships, pw::planet* source, pw::planet* destination, int total_trip_time, int time_remaining, pw::game_state* game_state) :
   _owner(owner), _ships(ships), _source(source), _destination(destination), _total_trip_time(total_trip_time), _time_remaining(time_remaining), _game_state(game_state) {
 }
 
@@ -11,12 +11,11 @@ int pw::fleet::owner() const {
 int pw::fleet::ships() const {
   return _ships;
 }
-
-const pw::planet* pw::fleet::source() const {
+ pw::planet* pw::fleet::source() {
   return _source;
 }
 
-const pw::planet* pw::fleet::destination() const {
+ pw::planet* pw::fleet::destination() {
   return _destination;
 }
 

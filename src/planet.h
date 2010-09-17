@@ -57,7 +57,7 @@ public:
   pw::planet in(int turns) const;
   double value() const;
   double value_in(int turns) const;
-  pw::planet* closest_source() const;
+  pw::planet* closest_ally(double min_distance = 0) const;
   pw::planet* closest_enemy() const;
   pw::planet* largest_enemy() const;
 

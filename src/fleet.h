@@ -20,7 +20,7 @@ namespace pw {
 class fleet {
 public:
   // Initializes a fleet.
-  fleet(int owner, int ships, const pw::planet* source, const pw::planet* destination, int total_trip_time, int time_remaining, pw::game_state* game_state);
+  fleet(int owner, int ships, pw::planet* source, pw::planet* destination, int total_trip_time, int time_remaining, pw::game_state* game_state);
 
   // Returns the playerID of the owner of the fleet. Your player ID is always
   // 1. So if the owner is 1, you own the fleet. If the owner is 2 or some
@@ -31,10 +31,10 @@ public:
   int ships() const;
 
   // Returns the ID of the planet where this fleet originated.
-  const pw::planet* source() const;
+  pw::planet* source();
 
   // Returns the ID of the planet where this fleet is headed.
-  const pw::planet* destination() const;
+  pw::planet* destination();
 
   // Returns the total trip time that is being traveled by this fleet. This
   // is the distance between the source planet and the destination planet,
@@ -57,8 +57,8 @@ public:
 private:
   int _owner;
   int _ships;
-  const pw::planet* _source;
-  const pw::planet* _destination;
+  pw::planet* _source;
+  pw::planet* _destination;
   int _total_trip_time;
   int _time_remaining;
   pw::game_state* _game_state;

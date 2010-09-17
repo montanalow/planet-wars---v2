@@ -46,15 +46,10 @@ void pw::planet::ships(int ships) {
 }
 
 void pw::planet::reserve(int ships) {
-  if (ships > _ships) {
-    ships = _ships;
-  }
-  if (ships < 0) {
-    ships = 0;
-  }
-//  std::cerr << "RESERVING: " << _id << " ships: " << ships << "\n";
+  ships = std::max(0, std::min(_ships, ships));
   _reserves += ships;
   _ships -= ships;
+//  std::cerr << "RESERVE | planet: " << _id << " ships: " << ships << "/" << _ships << "\n";
 }
 
 void pw::planet::add_ships(int amount) {
@@ -69,23 +64,24 @@ void pw::planet::game_state(pw::game_state* game_state) {
   _game_state = game_state;
 }
 
-pw::planet* pw::planet::closest_source() const{
-  pw::planet* source = NULL;
+pw::planet* pw::planet::closest_ally(double min_distance) const{
+  pw::planet* ally = NULL;
   double closest_distance = -1;
   for (std::vector<pw::planet*>::iterator planet = _game_state->allied_planets().begin(); planet < _game_state->allied_planets().end(); ++planet) {
-    if ((*planet)->ships() > 1 && (closest_distance == -1 || distance_to(**planet) < closest_distance)) {
-      source = *planet;
+    int distance = distance_to(**planet);
+    if (distance > min_distance && (closest_distance == -1 || distance_to(**planet) < closest_distance)) {
+      ally = *planet;
       closest_distance = distance_to(**planet);
     }
   }
-  return source;
+  return ally;
 }
 
 pw::planet* pw::planet::closest_enemy() const{
   pw::planet* enemy = NULL;
   double closest_distance = -1;
   for (std::vector<pw::planet*>::iterator planet = _game_state->enemy_planets().begin(); planet < _game_state->enemy_planets().end(); ++planet) {
-    if ((*planet)->ships() > 1 && (closest_distance == -1 || distance_to(**planet) < closest_distance)) {
+    if (closest_distance == -1 || distance_to(**planet) < closest_distance) {
       enemy = *planet;
       closest_distance = distance_to(**planet);
     }
@@ -168,9 +164,9 @@ pw::planet pw::planet::in(int time) const {
       // no clear winner, all ships are annihilated and control remains the same
       ships = neutral_ships = allied_ships = enemy_ships = 0;
     }
-//    std::cerr << "  planet: " << _id <<  " in: " << t << " owner: " << owner << " ships: " << ships << "\n";
+////    std::cerr << "  planet: " << _id <<  " in: " << t << " owner: " << owner << " ships: " << ships << "\n";
   }
-//  std::cerr << "  return in\n";
+////  std::cerr << "  return in\n";
   return pw::planet(_id, _x, _y, owner, ships, _growth_rate, _game_state);
 }
 
