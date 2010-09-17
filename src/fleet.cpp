@@ -60,3 +60,7 @@ const pw::fleet& pw::fleet::operator=(const pw::fleet& fleet) {
 bool pw::fleet::operator<(const pw::fleet& fleet) const {
   return _time_remaining < fleet._time_remaining;
 }
+
+bool pw::fleet::compare(const pw::fleet* a, const pw::fleet* b) {
+    return *a < *b;
+}

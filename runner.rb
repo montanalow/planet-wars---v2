@@ -14,8 +14,8 @@ if ARGV[0] == "tcp"
     end
   end
 elsif ARGV[0] && ARGV[1]
-  puts "java -jar tools/PlayGame-1.2.jar maps/map#{ARGV[0]}.txt 1000 1000 log.txt ./build/planet_wars \"java -jar ./example_bots/#{ARGV[1] || "Rage"}Bot.jar\" 2> error.log | java -jar tools/ShowGame.jar"
-  exec "java -jar tools/PlayGame-1.2.jar maps/map#{ARGV[0]}.txt 1000 1000 log.txt ./build/planet_wars \"java -jar ./example_bots/#{ARGV[1] || "Rage"}Bot.jar\" 2> error.log | java -jar tools/ShowGame.jar"
+  system "java -jar tools/PlayGame-1.2.jar maps/map#{ARGV[0]}.txt 1000 1000 log.txt ./build/planet_wars \"java -jar ./example_bots/#{ARGV[1] || "Rage"}Bot.jar\" 2> error.log | java -jar tools/ShowGame.jar"
+  system "java -jar tools/PlayGame-1.2.jar maps/map#{ARGV[0]}.txt 1000 1000 log.txt \"java -jar ./example_bots/#{ARGV[1] || "Rage"}Bot.jar\" ./build/planet_wars 2> error.log | java -jar tools/ShowGame.jar"
 elsif ARGV[0]
   maps = ["map#{ARGV[0]}.txt"]
   bots = Dir.entries "./example_bots"

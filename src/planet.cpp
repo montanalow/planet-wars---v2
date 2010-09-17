@@ -196,3 +196,11 @@ const pw::planet& pw::planet::operator=(const pw::planet& planet) {
 bool pw::planet::operator==(const pw::planet& planet) const {
   return _id == planet._id;
 }
+
+bool pw::planet::operator<(const pw::planet& planet) const {
+  return _growth_rate < planet._growth_rate;
+}
+
+bool pw::planet::compare(const pw::planet* a, const pw::planet* b) {
+  return *a < *b;
+}

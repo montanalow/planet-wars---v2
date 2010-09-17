@@ -52,6 +52,7 @@ public:
 
   const pw::fleet& operator=(const pw::fleet& fleet);
   bool operator<(const pw::fleet& fleet) const;
+  static bool compare(const pw::fleet* a, const pw::fleet* b);
 
 private:
   int _owner;

@@ -70,7 +70,9 @@ public:
 
   const pw::planet& operator=(const pw::planet& planet);
   bool operator==(const pw::planet& planet) const;
-
+  bool operator<(const pw::planet& planet) const;
+  static bool compare(const pw::planet* a, const pw::planet* b);
+  
 private:
   int _id;
   double _x, _y;
