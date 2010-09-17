@@ -57,7 +57,9 @@ public:
   pw::planet in(int turns) const;
   double value() const;
   double value_in(int turns) const;
-  const pw::planet* closest_source() const;
+  pw::planet* closest_source() const;
+  pw::planet* closest_enemy() const;
+  pw::planet* largest_enemy() const;
 
   // This is the number of discrete time steps it takes to get between
   // the two planets.  Returns the distance between two planets, rounded up

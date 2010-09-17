@@ -37,6 +37,9 @@ OptionParser.new do |parser|
   parser.on "-l", "--log [FILE_NAME]", "an optional log file, defaults to debug.log" do |file|
     options.log = file
   end
+  parser.on_tail("-h", "--help", "Show this message") do
+    puts parser
+  end
 end.parse!
 
 if options.tcp

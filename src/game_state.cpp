@@ -301,14 +301,7 @@ pw::game_state pw::game_state::operator++(int) {
 
 void pw::game_state::take_turn() {
   // protect against the ragebot rush
-  if (_turn < 5) {
-    for (int i = 0; i < _allied_planets.size(); ++i ){
-      pw::planet* planet = _allied_planets[i];
-      planet->reserve(planet->ships() / (float) _turn); // reserve 25% of the planets ships
-    }
-  }
-//
-  std::cerr << "*** Reserving against " << _enemy_fleets.size() << " enemy fleets ***\n";
+//  std::cerr << "*** Reserving against " << _enemy_fleets.size() << " enemy fleets ***\n";
   for (int g = 5; g > 0; --g) {
     for (int i = 0; i < _enemy_fleets.size(); ++i ){
       pw::fleet* enemy_fleet = _enemy_fleets[i];
@@ -334,8 +327,8 @@ void pw::game_state::take_turn() {
       }
     }
   }
-//
-  std::cerr << "*** Backing up against " << _enemy_fleets.size() << " enemy fleets ***\n";
+
+//  std::cerr << "*** Backing up against " << _enemy_fleets.size() << " enemy fleets ***\n";
   for (int g = 5; g > 0; --g) {
     for (int i = 0; i < _enemy_fleets.size(); ++i ){
       pw::fleet* enemy_fleet = _enemy_fleets[i];
@@ -355,6 +348,7 @@ void pw::game_state::take_turn() {
               int time = source->time_to(*enemy_fleet->destination());
               if (time > enemy_fleet->time_remaining()) {
                 // oh noes the planet is lost
+                break;
                 if (source->ships() > enemy_fleet->destination()->in(time).ships()) {
                   // at least we can clobber them, and can stop looking for reinforcements
 //                  std::cerr << "a\n";
@@ -392,6 +386,24 @@ void pw::game_state::take_turn() {
     }
   }
 
+  // reserve ships against future invasions
+//  std::cerr << "*** Reserve against closest enemy ***\n";
+  for (int g = 5; g > 0; --g) {
+    for (int i = 0; i < _allied_planets.size(); ++i ){
+      // iterate over allied planets largest to smallest
+      pw::planet* planet = _allied_planets[i];
+      if (planet->growth_rate() != g ) {
+        continue;
+      }
+
+      pw::planet* largest_enemy = planet->largest_enemy();
+      if (largest_enemy) {
+        int time = planet->time_to(*largest_enemy);
+//        std::cerr << " reserving | planet: " << planet->id() << " ships: " << planet->ships() << " growth_rate: " << planet->growth_rate() << " | enemy ships: " << closest_enemy->ships() << " distance: " << time << "\n";
+        planet->reserve(largest_enemy->ships() - (planet->growth_rate() * time));
+      }
+    }
+  }
 
 
   // attack their planets
@@ -412,9 +424,13 @@ void pw::game_state::take_turn() {
         double time = source->time_to(*planet);
         pw::planet planet_at_arrival = planet->in(time);
 //        std::cerr << "  planet:" << planet_at_arrival.id() << " owner: " << planet_at_arrival.owner() << " time: " << time << " ships: " << planet_at_arrival.ships() << " growth: " << planet_at_arrival.growth_rate() << " value: " << planet_at_arrival.value() / time << "\n";
-        if (planet_at_arrival.value() / pow(time,2) > highest_value) {
+        double value = planet_at_arrival.value() / pow(time,2);
+        if (planet_at_arrival.ships() < source->ships() && planet_at_arrival.owner() != 1){
+          value += 0.05;
+        }
+        if (value > highest_value) {
           destination = planet;
-          highest_value = planet_at_arrival.value() / pow(time,2);
+          highest_value = value;
         }
       }
 
@@ -439,50 +455,4 @@ void pw::game_state::take_turn() {
     }
   }
   finish_turn();
-
-//  // 1) calculate future game states
-//  std::vector<pw::game_state> game_states;
-//  game_states.push_back(game_state);
-//  while(game_state.max_fleet_time_remaining() > 0) {
-//    game_states.push_back(++game_state);
-//  }
-//
-//  // 2) find the largest forseable change in production for the cheapest ships in the closest time
-//  pw::planet* target = NULL;
-//  double target_value = 0;
-//  int time = 0;
-//  for (std::vector<pw::game_state>::const_iterator game_state = game_states.begin(); game_state < game_states.end(); ++game_state) {
-//    for (std::vector<pw::planet>::const_iterator planet = game_state->allied_planets().begin(); planet < game_state->allied_planets().end(); ++planet) {
-//      if (planet->owner() != 1) {
-//        if (planet->growth_rate() / (planet->ships() * time + 1.0) > target_value) {
-//          target_value = planet->growth_rate() / (planet->ships() * time + 1.0); // TODO denominator should be sum(source ships * source time to this destination)
-//          target = &(*planet);
-//        }
-//      }
-//    }
-//    ++time;
-//  }
-//
-//  if (target) {
-//
-//  }
-//
-//  for (size_t time = 0; time < game_states.size(); ++time) {
-//    pw::game_state& game_state = game_states[time];
-//    for (std::vector<pw::planet>::const_iterator planet = game_state.planets().begin(); planet < game_state.planets().end(); ++planet) {
-//      int cost = 0;
-//      switch (planet->owner()) {
-//        case 0:
-//          cost = planet->ships() * 2 * time;
-//          break;
-//        case 1:
-//          cost = time;
-//          break;
-//        case 2:
-//          cost = planet->ships() * time;
-//          break;
-//      }
-//      double value = planet->growth_rate() * planet->owner() * (game_state.max_fleet_time_remaining() - time);
-//    }
-//  }
 }

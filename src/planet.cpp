@@ -46,7 +46,13 @@ void pw::planet::ships(int ships) {
 }
 
 void pw::planet::reserve(int ships) {
-  ships = std::min(_ships, ships);
+  if (ships > _ships) {
+    ships = _ships;
+  }
+  if (ships < 0) {
+    ships = 0;
+  }
+//  std::cerr << "RESERVING: " << _id << " ships: " << ships << "\n";
   _reserves += ships;
   _ships -= ships;
 }
@@ -63,16 +69,40 @@ void pw::planet::game_state(pw::game_state* game_state) {
   _game_state = game_state;
 }
 
-const pw::planet* pw::planet::closest_source() const{
-  const pw::planet* source = NULL;
+pw::planet* pw::planet::closest_source() const{
+  pw::planet* source = NULL;
   double closest_distance = -1;
-  for (std::vector<pw::planet*>::iterator planet = _game_state->planets().begin(); planet < _game_state->planets().end(); ++planet) {
-    if ((*planet)->owner() == 1 && (*planet)->ships() > 1 && (closest_distance == -1 || distance_to(**planet) < closest_distance)) {
+  for (std::vector<pw::planet*>::iterator planet = _game_state->allied_planets().begin(); planet < _game_state->allied_planets().end(); ++planet) {
+    if ((*planet)->ships() > 1 && (closest_distance == -1 || distance_to(**planet) < closest_distance)) {
       source = *planet;
       closest_distance = distance_to(**planet);
     }
   }
   return source;
+}
+
+pw::planet* pw::planet::closest_enemy() const{
+  pw::planet* enemy = NULL;
+  double closest_distance = -1;
+  for (std::vector<pw::planet*>::iterator planet = _game_state->enemy_planets().begin(); planet < _game_state->enemy_planets().end(); ++planet) {
+    if ((*planet)->ships() > 1 && (closest_distance == -1 || distance_to(**planet) < closest_distance)) {
+      enemy = *planet;
+      closest_distance = distance_to(**planet);
+    }
+  }
+  return enemy;
+}
+
+pw::planet* pw::planet::largest_enemy() const{
+  pw::planet* enemy = NULL;
+  double most_ships = -1;
+  for (std::vector<pw::planet*>::iterator planet = _game_state->enemy_planets().begin(); planet < _game_state->enemy_planets().end(); ++planet) {
+    if ((*planet)->ships() > most_ships) {
+      enemy = *planet;
+      most_ships = (*planet)->ships();
+    }
+  }
+  return enemy;
 }
 
 pw::planet pw::planet::in(int time) const {
@@ -151,7 +181,7 @@ double pw::planet::value() const {
     case 1:
       return 0;
     case 2:
-      return (double) (2 * _growth_rate) / _ships;
+      return (double) (8 * _growth_rate) / _ships;
   }
 
   return 0; // failsafe
