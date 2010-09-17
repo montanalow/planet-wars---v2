@@ -82,7 +82,7 @@ options.maps.each do |m|
         collisions += 1
         print "### draw ### (#{moves} moves)"
       end
-      puts " as player 1 vs #{b} @ #{m} | ./runner -b #{b} #{m} m -p 2 -s"
+      puts " as player 1 vs #{b} @ #{m} | ./runner.rb -b #{b} -m #{m} -p 1 -l tmp.txt -s"
     end
     next unless running
     if options.players.include? 2
@@ -106,7 +106,7 @@ options.maps.each do |m|
         collisions += 1
         print "### draw ### (#{moves} moves)"
       end
-      puts " as player 2 vs #{b} @ #{m} | ./runner -b #{b} #{m} m -p 2 -s"
+      puts " as player 1 vs #{b} @ #{m} | ./runner.rb -b #{b} -m #{m} -p 2 -l tmp.txt -s"
     end
   end
 end
