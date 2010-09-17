@@ -87,7 +87,7 @@ std::string pw::game_state::to_string() const {
 void pw::game_state::issue_order(int source_id, int destination_id, int ships) {
   pw::planet* source = _planets[source_id];
   pw::planet* destination = _planets[destination_id];
-  if (ships >= source->ships()) {
+  if (ships > source->ships()) {
 //    std::cerr << "*********** ERROR: ordered too many ships ******************";
     return;
   }
@@ -351,7 +351,7 @@ void pw::game_state::take_turn() {
             const pw::planet* source = planet_after_invasion.closest_ally(min_distance);
             if (source) {
               min_distance = source->distance_to(*enemy_fleet->destination());
-              if (source->ships() < 2 ){
+              if (source->ships() < 1 ){
                 continue;
               }
               int time = source->time_to(*enemy_fleet->destination());
@@ -360,14 +360,14 @@ void pw::game_state::take_turn() {
                 break;
               } else {
                 // we'll get there first!
-                if (source->ships() > planet_after_invasion.ships()) {
+                if (source->ships() >= planet_after_invasion.ships()) {
 //                  std::cerr << "c\n";
                   issue_order(source->id(), enemy_fleet->destination()->id(), planet_after_invasion.ships());
                   break;
                 } else {
 //                  std::cerr << "d\n";
                   // send everything this planet's got, and keep finding reinforcements
-                  issue_order(source->id(), enemy_fleet->destination()->id(), source->ships() - 1);
+                  issue_order(source->id(), enemy_fleet->destination()->id(), source->ships());
                 }
               }
 //              std::cerr << "  source:" << source->id() << " ships: " << source->ships() << " distance: " << source->distance_to(*enemy_fleet->destination()) << "\n";
@@ -421,7 +421,7 @@ void pw::game_state::take_turn() {
   for (int i = 0; i < _allied_planets.size(); ++i ){
     pw::planet* source = _allied_planets[i];
 //    std::cerr << "source: " << source->id() << "\n";
-    while (source->ships() > 1) {
+    while (source->ships() > 0) {
       const pw::planet* destination = NULL;
       double highest_value = 0;
 
@@ -459,7 +459,7 @@ void pw::game_state::take_turn() {
             ships += enemy_fleet->ships();
           }
         }
-        ships = std::min(source->ships() - 1, ships);
+        ships = std::min(source->ships(), ships);
         issue_order(source->id(), destination->id(), ships);
       }
     }
