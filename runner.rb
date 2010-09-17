@@ -10,7 +10,7 @@ require 'optparse'
 options = OpenStruct.new \
   :tcp => false,
   :show => false,
-  :maps => Dir.entries("./maps").select{|m| m[-4..-1] == ".txt"}.sort{|a,b| a[4...-1].to_i <=> b[4...-1].to_i},
+  :maps => Dir.entries("./maps").select{|m| m[-4..-1] == ".txt"}.sort{|a,b| a[3..-4].to_i <=> b[3..-4].to_i},
   :bots => Dir.entries("./example_bots").select {|m| m[-4..-1] == ".jar"},
   :players => [1,2],
   :log => "debug.log"
