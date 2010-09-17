@@ -13,8 +13,6 @@
 #include <iostream>
 #include <fstream>
 
-#include "config.h"
-
 namespace pw {
 
 // This is a utility class that parses strings.
