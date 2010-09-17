@@ -76,13 +76,13 @@ options.maps.each do |m|
       elsif result == "Player 2 Wins!"
         m_results[m][:losses] += 1
         losses += 1
-        print "@@@ loss @@@ (#{moves} moves) ./runner -b #{b} #{m} m -p 1 -s"
+        print "@@@ loss @@@ (#{moves} moves)"
       elsif result == "Draw!"
         m_results[m][:draws] += 1
         collisions += 1
-        print "### draw ### (#{moves} moves) ./runner -b #{b} #{m} m -p 1 -s"
+        print "### draw ### (#{moves} moves)"
       end
-      puts " as player 1 vs #{b} @ #{m}"
+      puts " as player 1 vs #{b} @ #{m} | ./runner -b #{b} #{m} m -p 2 -s"
     end
     next unless running
     if options.players.include? 2
@@ -100,13 +100,13 @@ options.maps.each do |m|
       elsif result == "Player 1 Wins!"
         m_results[m][:losses] += 1
         losses += 1
-        print "@@@ loss @@@ (#{moves} moves) ./runner -b #{b} #{m} m -p 2 -s"
+        print "@@@ loss @@@ (#{moves} moves)"
       elsif result == "Draw!"
         m_results[m][:draws] += 1
         collisions += 1
-        print "### draw ### (#{moves} moves) ./runner -b #{b} #{m} m -p 2 -s"
+        print "### draw ### (#{moves} moves)"
       end
-      puts " as player 2 vs #{b} @ #{m}"
+      puts " as player 2 vs #{b} @ #{m} | ./runner -b #{b} #{m} m -p 2 -s"
     end
   end
 end
