@@ -84,7 +84,7 @@ void pw::game_state::issue_order(int source_id, int destination_id, int ships) {
   pw::planet* source = _planets[source_id];
   pw::planet* destination = _planets[destination_id];
   if (ships >= source->ships()) {
-    std::cerr << "*********** ERROR: ordered too many ships ******************";
+//    std::cerr << "*********** ERROR: ordered too many ships ******************";
     return;
   }
   pw::fleet* fleet = new pw::fleet(1, ships, source, destination, source->time_to(*destination), source->time_to(*destination), this);
@@ -92,12 +92,12 @@ void pw::game_state::issue_order(int source_id, int destination_id, int ships) {
   _fleets.push_back(fleet);
   _allied_fleets.push_back(fleet);
   std::cout << source_id << " " << destination_id << " " << ships << std::endl;
-  std::cerr << "order | source: " << source_id << " destination: " << destination_id << " ships: " << ships << std::endl;
+//  std::cerr << "order | source: " << source_id << " destination: " << destination_id << " ships: " << ships << std::endl;
 }
 
 void pw::game_state::reserve(int source_id, int ships) {
   _planets[source_id]->reserve(ships);
-  std::cerr << "reserve | source: " << source_id << " ships: " << ships << std::endl;
+//  std::cerr << "reserve | source: " << source_id << " ships: " << ships << std::endl;
 }
 
 void pw::game_state::clear() {
@@ -206,8 +206,8 @@ int pw::game_state::parse_game_state_data(const std::string& game_state_data) {
 void pw::game_state::finish_turn() {
   std::cout << "go" << std::endl;
   std::cout.flush();
-  std::cerr << "*** finished turn ***\n";
-  std::cerr.flush();
+//  std::cerr << "*** finished turn ***\n";
+//  std::cerr.flush();
 }
 
 pw::game_state& pw::game_state::operator=(const pw::game_state& game_state) {
@@ -301,13 +301,14 @@ pw::game_state pw::game_state::operator++(int) {
 
 void pw::game_state::take_turn() {
   // protect against the ragebot rush
-  if (_turn == 1) {
+  if (_turn < 5) {
     for (int i = 0; i < _allied_planets.size(); ++i ){
       pw::planet* planet = _allied_planets[i];
-      planet->reserve(planet->ships()); // reserve 25% of the planets ships
+      planet->reserve(planet->ships() / (float) _turn); // reserve 25% of the planets ships
     }
   }
-  std::cerr << "*** Defending against " << _enemy_fleets.size() << " enemy fleets ***\n";
+//
+  std::cerr << "*** Reserving against " << _enemy_fleets.size() << " enemy fleets ***\n";
   for (int g = 5; g > 0; --g) {
     for (int i = 0; i < _enemy_fleets.size(); ++i ){
       pw::fleet* enemy_fleet = _enemy_fleets[i];
@@ -316,16 +317,37 @@ void pw::game_state::take_turn() {
       }
       pw::planet planet_before_invasion = enemy_fleet->destination()->in(enemy_fleet->time_remaining() - 1);
       if (planet_before_invasion.owner() == 1) { // invasion!
-  //    std::cerr << "  invading | source: " << enemy_fleet->source()->id() << " destination: " << enemy_fleet->destination()->id() << " ships: " << enemy_fleet->ships() << " time remaining: " << enemy_fleet->time_remaining() << "\n";
+//        std::cerr << "  invading | source: " << enemy_fleet->source()->id() << " destination: " << enemy_fleet->destination()->id() << " ships: " << enemy_fleet->ships() << " time remaining: " << enemy_fleet->time_remaining() << "\n";
         pw::planet planet_after_invasion = enemy_fleet->destination()->in(enemy_fleet->time_remaining());
-  //      std::cerr << "  after invasion | owner: " << planet_after_invasion.owner() << " ships: " << planet_after_invasion.ships() << "\n";
+//        std::cerr << "  after invasion | owner: " << planet_after_invasion.owner() << " ships: " << planet_after_invasion.ships() << "\n";
         if (planet_after_invasion.owner() == 1) {
-  //        std::cerr << "1\n";
-          reserve(planet_after_invasion.id(), std::max(0, enemy_fleet->destination()->ships() - planet_after_invasion.ships())); // reserve only as many ships as it takes to defend
+          // reserve only as many ships as it takes to defend
+//          std::cerr << "  reserving some\n";
+          reserve(planet_after_invasion.id(), std::max(0, enemy_fleet->destination()->ships() - planet_after_invasion.ships()));
         } else {
-  //        std::cerr << "2\n";
           // reserve everything
+//          std::cerr << "  reserving everything\n";
           reserve(planet_after_invasion.id(), enemy_fleet->destination()->ships());
+        }
+      } else {
+//        std::cerr << "  not an invader | source: " << enemy_fleet->source()->id() << " destination: " << enemy_fleet->destination()->id() << " ships: " << enemy_fleet->ships() << "\n";
+      }
+    }
+  }
+//
+  std::cerr << "*** Backing up against " << _enemy_fleets.size() << " enemy fleets ***\n";
+  for (int g = 5; g > 0; --g) {
+    for (int i = 0; i < _enemy_fleets.size(); ++i ){
+      pw::fleet* enemy_fleet = _enemy_fleets[i];
+      if (enemy_fleet->destination()->growth_rate() != g ) {
+        continue;
+      }
+      pw::planet planet_before_invasion = enemy_fleet->destination()->in(enemy_fleet->time_remaining() - 1);
+      if (planet_before_invasion.owner() == 1) { // invasion!
+//      std::cerr << "  invading | source: " << enemy_fleet->source()->id() << " destination: " << enemy_fleet->destination()->id() << " ships: " << enemy_fleet->ships() << " time remaining: " << enemy_fleet->time_remaining() << "\n";
+        pw::planet planet_after_invasion = enemy_fleet->destination()->in(enemy_fleet->time_remaining());
+//        std::cerr << "  after invasion | owner: " << planet_after_invasion.owner() << " ships: " << planet_after_invasion.ships() << "\n";
+        if (planet_after_invasion.owner() != 1) {
           // find backup
           while (true) {
             const pw::planet* source = planet_after_invasion.closest_source();
@@ -335,45 +357,48 @@ void pw::game_state::take_turn() {
                 // oh noes the planet is lost
                 if (source->ships() > enemy_fleet->destination()->in(time).ships()) {
                   // at least we can clobber them, and can stop looking for reinforcements
-  //                std::cerr << "a\n";
+//                  std::cerr << "a\n";
                   issue_order(source->id(), enemy_fleet->destination()->id(), enemy_fleet->destination()->in(time).ships() + 1);
                   break;
                 } else {
                   // send everything this planet's got, and keep finding reinforcements
-  //                std::cerr << "b\n";
+//                  std::cerr << "b\n";
                   issue_order(source->id(), enemy_fleet->destination()->id(), source->ships() - 1);
                 }
               } else {
                 // we'll get there first!
                 if (source->ships() > planet_after_invasion.ships()) {
-  //                std::cerr << "c\n";
+//                  std::cerr << "c\n";
                   issue_order(source->id(), enemy_fleet->destination()->id(), planet_after_invasion.ships());
                   break;
                 } else {
-  //                std::cerr << "d\n";
+//                  std::cerr << "d\n";
                   // send everything this planet's got, and keep finding reinforcements
                   issue_order(source->id(), enemy_fleet->destination()->id(), source->ships() - 1);
                 }
               }
-  //            std::cerr << "  source:" << source->id() << " ships: " << source->ships() << " distance: " << source->distance_to(*enemy_fleet->destination()) << "\n";
-  //            std::cerr << "  planet:" << planet_after_invasion.id() << " time: " << enemy_fleet->time_remaining() << " ships: " << planet_after_invasion.ships() << " growth: " << planet_after_invasion.growth_rate() << " value: " << planet_after_invasion.value() / pow(enemy_fleet->time_remaining() + 1, 2) << "\n";
+//              std::cerr << "  source:" << source->id() << " ships: " << source->ships() << " distance: " << source->distance_to(*enemy_fleet->destination()) << "\n";
+//              std::cerr << "  planet:" << planet_after_invasion.id() << " time: " << enemy_fleet->time_remaining() << " ships: " << planet_after_invasion.ships() << " growth: " << planet_after_invasion.growth_rate() << " value: " << planet_after_invasion.value() / pow(enemy_fleet->time_remaining() + 1, 2) << "\n";
             } else {
-  //            std::cerr << "  no source\n";
+//              std::cerr << "  no source\n";
               break;
             }
             planet_after_invasion = enemy_fleet->destination()->in(enemy_fleet->time_remaining());
           }
         }
       } else {
-  //      std::cerr << "  not an invader | source: " << enemy_fleet->source()->id() << " destination: " << enemy_fleet->destination()->id() << " ships: " << enemy_fleet->ships() << "\n";
+//        std::cerr << "  not an invader | source: " << enemy_fleet->source()->id() << " destination: " << enemy_fleet->destination()->id() << " ships: " << enemy_fleet->ships() << "\n";
       }
     }
   }
+
+
+
   // attack their planets
-  std::cerr << "*** Attacking ***\n";
+//  std::cerr << "*** Attacking ***\n";
   for (int i = 0; i < _allied_planets.size(); ++i ){
     pw::planet* source = _allied_planets[i];
-    std::cerr << "source: " << source->id() << "\n";
+//    std::cerr << "source: " << source->id() << "\n";
     while (source->ships() > 1) {
       const pw::planet* destination = NULL;
       double highest_value = 0;
@@ -386,7 +411,7 @@ void pw::game_state::take_turn() {
         }
         double time = source->time_to(*planet);
         pw::planet planet_at_arrival = planet->in(time);
-        std::cerr << "  planet:" << planet_at_arrival.id() << " owner: " << planet_at_arrival.owner() << " time: " << time << " ships: " << planet_at_arrival.ships() << " growth: " << planet_at_arrival.growth_rate() << " value: " << planet_at_arrival.value() / time << "\n";
+//        std::cerr << "  planet:" << planet_at_arrival.id() << " owner: " << planet_at_arrival.owner() << " time: " << time << " ships: " << planet_at_arrival.ships() << " growth: " << planet_at_arrival.growth_rate() << " value: " << planet_at_arrival.value() / time << "\n";
         if (planet_at_arrival.value() / pow(time,2) > highest_value) {
           destination = planet;
           highest_value = planet_at_arrival.value() / pow(time,2);
@@ -395,10 +420,10 @@ void pw::game_state::take_turn() {
 
       // find the min ships we need to send
       if (destination == NULL || destination->id() == source->id()) {
-        std::cerr << " no destination\n:";
+//        std::cerr << " no destination\n:";
         break;
       } else {
-        std::cerr << "destination: " << destination->id() << "\n";
+//        std::cerr << "destination: " << destination->id() << "\n";
   
         pw::planet d = destination->in(source->time_to(*destination));
         int ships = d.ships() + 1 + (d.owner() == 2 ? d.growth_rate() : 0);
