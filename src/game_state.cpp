@@ -359,16 +359,6 @@ void pw::game_state::take_turn() {
               if (time > enemy_fleet->time_remaining()) {
                 // oh noes the planet is lost
                 break;
-                if (source->ships() > enemy_fleet->destination()->in(time).ships()) {
-                  // at least we can clobber them, and can stop looking for reinforcements
-//                  std::cerr << "a\n";
-                  issue_order(source->id(), enemy_fleet->destination()->id(), enemy_fleet->destination()->in(time).ships() + 1);
-                  break;
-                } else {
-                  // send everything this planet's got, and keep finding reinforcements
-//                  std::cerr << "b\n";
-                  issue_order(source->id(), enemy_fleet->destination()->id(), source->ships() - 1);
-                }
               } else {
                 // we'll get there first!
                 if (source->ships() > planet_after_invasion.ships()) {
