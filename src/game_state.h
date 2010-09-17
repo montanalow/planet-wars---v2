@@ -21,6 +21,7 @@ public:
   // Initializes the game state given a string containing game state data.
   game_state(const std::string& game_state_date, int turn);
   game_state(const game_state& game_state, int turn);
+  ~game_state();
   
   // Returns a list of all the planets.
   std::vector<pw::planet*>& planets();

@@ -33,6 +33,10 @@ pw::game_state::game_state(const pw::game_state& game_state, int turn) :
   _max_fleet_time_remaining(0),
   _turn(turn) { }
 
+pw::game_state::~game_state(){
+  clear();
+}
+
 // data
 std::vector<pw::planet*>& pw::game_state::planets() {
   return _planets;
@@ -199,7 +203,9 @@ int pw::game_state::parse_game_state_data(const std::string& game_state_data) {
       return 0;
     }
   }
+
   index();
+
   return 1;
 }
 
