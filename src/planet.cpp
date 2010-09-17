@@ -181,7 +181,7 @@ double pw::planet::value() const {
     case 1:
       return 0;
     case 2:
-      return (double) (8 * _growth_rate + 1) / _ships;
+      return (double) (8 * _growth_rate) / _ships;
   }
 
   return 0; // failsafe
