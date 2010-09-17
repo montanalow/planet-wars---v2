@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     int c = std::cin.get();
     current_line += (char) c;
     if (c == '\n') {
-      std::cerr << current_line;
+//      std::cerr << current_line;
       if (current_line.length() >= 2 && current_line.substr(0, 2) == "go") {
         pw::game_state game_state(game_state_data);
         game_state_data = "";

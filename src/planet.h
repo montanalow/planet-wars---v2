@@ -77,8 +77,6 @@ private:
   int _owner;
   int _ships;
   int _reserves;
-  int _reserved_ships;
-  int _available_ships;
   int _growth_rate;
   pw::game_state* _game_state;
 };

@@ -6,11 +6,11 @@
 #include "planet.h"
 
 pw::planet::planet(int id, double x, double y, int owner, int ships, int growth_rate, pw::game_state* game_state)
-  : _id(id), _x(x), _y(y), _owner(owner), _ships(ships), _growth_rate(growth_rate), _game_state(game_state) {
+  : _id(id), _x(x), _y(y), _owner(owner), _ships(ships), _reserves(0), _growth_rate(growth_rate), _game_state(game_state) {
 }
 
 pw::planet::planet(const pw::planet& planet)
-  : _id(planet._id), _x(planet._x), _y(planet._y), _owner(planet._owner), _ships(planet._ships), _growth_rate(planet._growth_rate), _game_state(planet._game_state) {
+  : _id(planet._id), _x(planet._x), _y(planet._y), _owner(planet._owner), _ships(planet._ships), _reserves(planet._reserves), _growth_rate(planet._growth_rate), _game_state(planet._game_state) {
 }
 
 int pw::planet::id() const {
@@ -77,7 +77,7 @@ const pw::planet* pw::planet::closest_source() const{
 
 pw::planet pw::planet::in(int time) const {
   int owner = _owner;
-  int ships = _ships;
+  int ships = _ships + _reserves;
   
   // initialize ships on the planet
   int neutral_ships = 0, allied_ships = 0, enemy_ships = 0;
@@ -86,14 +86,14 @@ pw::planet pw::planet::in(int time) const {
       neutral_ships = _ships;
       break;
     case 1:
-      allied_ships = _ships;
+      allied_ships = _ships + _reserves;
       break;
     case 2:
       enemy_ships = _ships;
       break;
   }
 
-  for (int t = 0; t <= time; ++t) {
+  for (int t = 1; t <= time; ++t) {
     // add newly produced ships to player controlled planets
     switch (owner) {
       case 1:
@@ -187,6 +187,7 @@ const pw::planet& pw::planet::operator=(const pw::planet& planet) {
   _y = planet._y;
   _owner = planet._owner;
   _ships = planet._ships;
+  _reserves = planet._reserves;
   _growth_rate = planet._growth_rate;
   _game_state = planet._game_state;
   return *this;
