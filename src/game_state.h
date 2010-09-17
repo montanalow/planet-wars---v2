@@ -19,8 +19,8 @@ namespace pw {
 class game_state {
 public:
   // Initializes the game state given a string containing game state data.
-  game_state(const std::string& game_state_date);
-  game_state(const game_state& game_state);
+  game_state(const std::string& game_state_date, int turn);
+  game_state(const game_state& game_state, int turn);
   
   // Returns a list of all the planets.
   std::vector<pw::planet*>& planets();
@@ -81,6 +81,7 @@ private:
   std::vector<pw::fleet*> _allied_fleets;
   std::vector<pw::fleet*> _enemy_fleets;
   int _max_fleet_time_remaining;
+  int _turn;
 };
 
 }

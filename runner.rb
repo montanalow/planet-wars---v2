@@ -13,10 +13,17 @@ if ARGV[0] == "tcp"
       sleep 1
     end
   end
+elsif ARGV[0] && ARGV[1]
+  puts "java -jar tools/PlayGame-1.2.jar maps/map#{ARGV[0]}.txt 1000 1000 log.txt ./build/planet_wars \"java -jar ./example_bots/#{ARGV[1] || "Rage"}Bot.jar\" 2> error.log | java -jar tools/ShowGame.jar"
+  exec "java -jar tools/PlayGame-1.2.jar maps/map#{ARGV[0]}.txt 1000 1000 log.txt ./build/planet_wars \"java -jar ./example_bots/#{ARGV[1] || "Rage"}Bot.jar\" 2> error.log | java -jar tools/ShowGame.jar"
+elsif ARGV[0]
+  maps = ["map#{ARGV[0]}.txt"]
+  bots = Dir.entries "./example_bots"
+else
+  maps = Dir.entries "./maps"
+  bots = Dir.entries "./example_bots"
 end
 
-maps = Dir.entries "./maps"
-bots = Dir.entries "./example_bots"
 map_limit = 100
 bot_limit = 15
 
@@ -35,46 +42,49 @@ maps.each do |m|
     next unless running
     `java -jar tools/PlayGame-1.2.jar maps/#{m} 1000 1000 log.txt build/planet_wars "java -jar example_bots/#{b}" 2> runner.log`
     next unless running
-    debug = File.read("runner.log").split("\n").select{|line| (line =~ /Turn \d+/) == 0 || line =~ /Player \d/}
-    File.delete "runner.log"
+    debug = File.read("runner.log").split("\n")
+    moves = debug.select{|line| (line =~ /Turn \d+/) == 0}.size
     result = debug[-1]
-    print "1 vs #{b} @ #{m}: "
+    File.delete "runner.log"
     if result == "Player 1 Wins!"
       m_results[m][:wins] += 1
-      m_results[m][:win_moves] += debug.size
+      m_results[m][:win_moves] += moves
       wins += 1
       win_moves += debug.size
-      puts "!!! win !!! (#{debug.size - 1} moves)"
+      print "!!! win !!! (#{moves} moves)"
     elsif result == "Player 2 Wins!"
       m_results[m][:losses] += 1
       losses += 1
-      puts "@@@ loss @@@ (#{debug.size - 1} moves)"
-    elsif result == "Draw! #{debug.size}"
-      m_results[m][:draws] += 1
-      collisions += 1
-      puts "draw (#{debug.size - 1} moves)"
-    end
-    `java -jar tools/PlayGame-1.2.jar maps/#{m} 1000 1000 log.txt "java -jar example_bots/#{b}" build/planet_wars 2> runner.log`
-    next unless running
-    debug = File.read("runner.log").split("\n").select{|line| (line =~ /Turn \d+/) == 0 || line =~ /Player \d/}
-    File.delete "runner.log"
-    result = debug[-1]
-    print "2 vs #{b} @ #{m}: "
-    if result == "Player 2 Wins!"
-      m_results[m][:wins] += 1
-      m_results[m][:win_moves] += debug.size
-      wins += 1
-      win_moves += debug.size
-      puts "!!! win !!! (#{debug.size - 1} moves)"
-    elsif result == "Player 1 Wins!"
-      m_results[m][:losses] += 1
-      losses += 1
-      puts "@@@ loss @@@ (#{debug.size - 1} moves)"
+      print "@@@ loss @@@ (#{moves} moves)"
     elsif result == "Draw!"
       m_results[m][:draws] += 1
       collisions += 1
-      puts "draw (#{debug.size - 1} moves)"
+      print "### draw ### (#{moves} moves)"
     end
+    puts " as player 1 vs #{b} @ #{m}"
+
+    `java -jar tools/PlayGame-1.2.jar maps/#{m} 1000 1000 log.txt "java -jar example_bots/#{b}" build/planet_wars 2> runner.log`
+    next unless running
+    debug = File.read("runner.log").split("\n")
+    moves = debug.select{|line| (line =~ /Turn \d+/) == 0}.size
+    result = debug[-1]
+    File.delete "runner.log"
+    if result == "Player 2 Wins!"
+      m_results[m][:wins] += 1
+      m_results[m][:win_moves] += moves
+      wins += 1
+      win_moves += debug.size
+      print "!!! win !!! (#{moves} moves)"
+    elsif result == "Player 1 Wins!"
+      m_results[m][:losses] += 1
+      losses += 1
+      print "@@@ loss @@@ (#{moves} moves)"
+    elsif result == "Draw!"
+      m_results[m][:draws] += 1
+      collisions += 1
+      print "### draw ### (#{moves} moves)"
+    end
+    puts " as player 2 vs #{b} @ #{m}"
   end
 end
 
