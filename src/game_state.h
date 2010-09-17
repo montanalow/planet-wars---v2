@@ -3,8 +3,8 @@
 // well as communicating with the game engine. You can get along just fine
 // without ever looking at this file. However, you are welcome to modify it
 // if you want to.
-#ifndef PLANET_WARS_H_
-#define PLANET_WARS_H_
+#ifndef GAME_STATE_H
+#define GAME_STATE_H
 
 namespace pw {class game_state;}
 
@@ -86,4 +86,4 @@ private:
 };
 
 }
-#endif
+#endif /* GAME_STATE_H */
