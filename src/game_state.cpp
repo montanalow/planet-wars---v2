@@ -305,7 +305,6 @@ pw::game_state pw::game_state::operator++(int) {
 }
 
 void pw::game_state::take_turn() {
-  // protect against the ragebot rush
 //  std::cerr << "*** Reserving against " << _enemy_fleets.size() << " enemy fleets ***\n";
   for (int g = 5; g > 0; --g) {
     for (int i = 0; i < _enemy_fleets.size(); ++i ){
@@ -323,7 +322,7 @@ void pw::game_state::take_turn() {
 //          std::cerr << "  reserving some\n";
           enemy_fleet->destination()->reserve(enemy_fleet->destination()->ships() - planet_after_invasion.ships());
         } else {
-          // reserve everything
+          // reserve everything, we're gonna need backup
 //          std::cerr << "  reserving everything\n";
           enemy_fleet->destination()->reserve(enemy_fleet->destination()->ships());
         }
@@ -400,6 +399,22 @@ void pw::game_state::take_turn() {
     }
   }
 
+  // reserve ships against future invasions, from futurely invaded planets
+//  std::cerr << "*** Reserve future invaders invading a second target ***\n";
+  for (int g = 5; g > 0; --g) {
+    for (int i = 0; i < _enemy_fleets.size(); ++i ){
+      pw::fleet* enemy_fleet = _enemy_fleets[i];
+      pw::planet planet_after_invasion = enemy_fleet->destination()->in(enemy_fleet->time_remaining());
+      if (planet_after_invasion.owner() == 2) {
+        // TODO: this should be the closest ally after this enemy_fleet lands, not now
+        pw::planet* closest_ally = planet_after_invasion.closest_ally();
+        if (closest_ally) {
+          int time = planet_after_invasion.time_to(*closest_ally);
+          closest_ally->reserve(planet_after_invasion.ships() - (closest_ally->growth_rate() * (time + enemy_fleet->time_remaining())));
+        }
+      }
+    }
+  }
 
   // attack their planets
 //  std::cerr << "*** Attacking ***\n";
