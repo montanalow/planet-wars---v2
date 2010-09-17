@@ -12,7 +12,8 @@ options = OpenStruct.new \
   :show => false,
   :maps => Dir.entries("./maps").select {|m| m[-4..-1] == ".txt"},
   :bots => Dir.entries("./example_bots").select {|m| m[-4..-1] == ".jar"},
-  :players => [1,2]
+  :players => [1,2],
+  :log => "debug.log"
 
 OptionParser.new do |parser|
   parser.banner = "Usage: runner.rb [options]"
@@ -32,6 +33,9 @@ OptionParser.new do |parser|
   end
   parser.on "-p", "--players [PLAYERS]", Array, "an optional list of players to play as, defaults to [1,2]" do |players|
     options.players = players.map{|player| player.to_i}
+  end
+  parser.on "-l", "--log [FILE_NAME]", "an optional log file, defaults to debug.log" do |file|
+    options.log = file
   end
 end.parse!
 
@@ -58,11 +62,11 @@ options.maps.each do |m|
   options.bots.each do |b|
     next unless running
     if options.players.include? 1
-      `java -jar tools/PlayGame-1.2.jar maps/#{m} 4000 1000 log.txt build/planet_wars "java -jar example_bots/#{b}" 2> runner.log #{options.show ? "| java -jar tools/ShowGame.jar" : ""}`
-      debug = File.read("runner.log").split("\n")
+      `java -jar tools/PlayGame-1.2.jar maps/#{m} 4000 1000 log.txt build/planet_wars "java -jar example_bots/#{b}" 2> #{options.log} #{options.show ? "| java -jar tools/ShowGame.jar" : ""}`
+      debug = File.read(options.log).split("\n")
       moves = debug.select{|line| (line =~ /Turn \d+/) == 0}.size
       result = debug[-1]
-      File.delete "runner.log"
+      File.delete options.log
       if result == "Player 1 Wins!"
         m_results[m][:wins] += 1
         m_results[m][:win_moves] += moves
@@ -72,21 +76,21 @@ options.maps.each do |m|
       elsif result == "Player 2 Wins!"
         m_results[m][:losses] += 1
         losses += 1
-        print "@@@ loss @@@ (#{moves} moves)"
+        print "@@@ loss @@@ (#{moves} moves) ./runner -b #{b} #{m} m -p 1 -s"
       elsif result == "Draw!"
         m_results[m][:draws] += 1
         collisions += 1
-        print "### draw ### (#{moves} moves)"
+        print "### draw ### (#{moves} moves) ./runner -b #{b} #{m} m -p 1 -s"
       end
       puts " as player 1 vs #{b} @ #{m}"
     end
     next unless running
     if options.players.include? 2
-      `java -jar tools/PlayGame-1.2.jar maps/#{m} 1000 1000 log.txt "java -jar example_bots/#{b}" build/planet_wars 2> runner.log #{options.show ? "| java -jar tools/ShowGame.jar" : ""}`
-      debug = File.read("runner.log").split("\n")
+      `java -jar tools/PlayGame-1.2.jar maps/#{m} 1000 1000 log.txt "java -jar example_bots/#{b}" build/planet_wars 2> #{options.log} #{options.show ? "| java -jar tools/ShowGame.jar" : ""}`
+      debug = File.read(options.log).split("\n")
       moves = debug.select{|line| (line =~ /Turn \d+/) == 0}.size
       result = debug[-1]
-      File.delete "runner.log"
+      File.delete options.log
       if result == "Player 2 Wins!"
         m_results[m][:wins] += 1
         m_results[m][:win_moves] += moves
@@ -96,11 +100,11 @@ options.maps.each do |m|
       elsif result == "Player 1 Wins!"
         m_results[m][:losses] += 1
         losses += 1
-        print "@@@ loss @@@ (#{moves} moves)"
+        print "@@@ loss @@@ (#{moves} moves) ./runner -b #{b} #{m} m -p 2 -s"
       elsif result == "Draw!"
         m_results[m][:draws] += 1
         collisions += 1
-        print "### draw ### (#{moves} moves)"
+        print "### draw ### (#{moves} moves) ./runner -b #{b} #{m} m -p 2 -s"
       end
       puts " as player 2 vs #{b} @ #{m}"
     end
