@@ -356,7 +356,7 @@ void pw::game_state::take_turn() {
               }
               int time = source->time_to(*enemy_fleet->destination());
               if (time > enemy_fleet->time_remaining()) {
-                // oh noes the planet is lost
+                // oh noes the planet is lost, don't worry, we'll still attack it if we have any ships left after reinforcing
                 break;
               } else {
                 // we'll get there first!
@@ -367,6 +367,7 @@ void pw::game_state::take_turn() {
                 } else {
 //                  std::cerr << "d\n";
                   // send everything this planet's got, and keep finding reinforcements
+                  // TODO this should only keep searching for more planets to reinforce if this planet won't be able to do all the reinforcing by itself
                   issue_order(source->id(), enemy_fleet->destination()->id(), source->ships());
                 }
               }
@@ -385,7 +386,7 @@ void pw::game_state::take_turn() {
     }
   }
 
-  // reserve ships against future invasions
+  // reserve ships against future invasions from enemy planets
 //  std::cerr << "*** Reserve against closest enemy ***\n";
   for (int i = 0; i < _enemy_planets.size(); ++i ){
     // iterate over allied planets largest to smallest
