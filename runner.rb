@@ -74,7 +74,7 @@ options.maps.each do |m|
         m_results[m][:wins] += 1
         m_results[m][:win_moves] += moves
         wins += 1
-        win_moves += debug.size
+        win_moves += moves
         print "!!! win !!! (#{moves} moves)"
       elsif result == "Player 2 Wins!"
         m_results[m][:losses] += 1
@@ -98,7 +98,7 @@ options.maps.each do |m|
         m_results[m][:wins] += 1
         m_results[m][:win_moves] += moves
         wins += 1
-        win_moves += debug.size
+        win_moves += moves
         print "!!! win !!! (#{moves} moves)"
       elsif result == "Player 1 Wins!"
         m_results[m][:losses] += 1
@@ -117,14 +117,14 @@ end
 m_results.each do |map, results|
   puts "================================"
   puts "@ #{map}"
-  puts "Wins: #{results[:wins]} (#{results[:win_moves] / (options.bots.size * 2)} avg moves)"
+  puts "Wins: #{results[:wins]} (#{results[:win_moves] / (options.bots.size * options.players.size)} avg moves)"
   puts "Losses: #{results[:losses]}"
   puts "Draws: #{results[:draws]}"
   puts "-------------------------------"
   puts "Ratio: #{(results[:wins].to_f + 0.5 * results[:draws]) / (results[:wins] + results[:losses] + results[:draws])}"
 end
 puts "-------------------------------"
-puts "Wins: #{wins} (#{win_moves / (options.bots.size * options.maps.size * 2)} avg moves)"
+puts "Wins: #{wins} (#{win_moves / (options.bots.size * options.maps.size * options.players.size)} avg moves)"
 puts "Losses: #{losses}"
 puts "Draws: #{draws}"
 puts "-------------------------------"
