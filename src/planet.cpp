@@ -177,6 +177,7 @@ double pw::planet::value() const {
     case 1:
       return 0;
     case 2:
+      // TODO Adjust expansion vs aggresion ratio depending if I'm winning in terms of production
       return (double) (8 * _growth_rate) / _ships;
   }
 
