@@ -35,7 +35,7 @@ maps.each do |m|
     next unless running
     `java -jar tools/PlayGame-1.2.jar maps/#{m} 1000 1000 log.txt build/planet_wars "java -jar example_bots/#{b}" 2> runner.log`
     next unless running
-    debug = File.read("runner.log").split("\n").select{|line| (line =~ /Turn \d+/) == 0}
+    debug = File.read("runner.log").split("\n").select{|line| (line =~ /Turn \d+/) == 0 || line =~ /Player \d/}
     File.delete "runner.log"
     result = debug[-1]
     print "1 vs #{b} @ #{m}: "
@@ -56,7 +56,7 @@ maps.each do |m|
     end
     `java -jar tools/PlayGame-1.2.jar maps/#{m} 1000 1000 log.txt "java -jar example_bots/#{b}" build/planet_wars 2> runner.log`
     next unless running
-    debug = File.read("runner.log").split("\n").select{|line| (line =~ /Turn \d+/) == 0}
+    debug = File.read("runner.log").split("\n").select{|line| (line =~ /Turn \d+/) == 0 || line =~ /Player \d/}
     File.delete "runner.log"
     result = debug[-1]
     print "2 vs #{b} @ #{m}: "
