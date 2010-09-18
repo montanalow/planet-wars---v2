@@ -1,7 +1,7 @@
 #include "fleet.h"
 
-pw::fleet::fleet(int owner, int ships, pw::planet* source, pw::planet* destination, int total_trip_time, int time_remaining, pw::game_state* game_state) :
-  _owner(owner), _ships(ships), _source(source), _destination(destination), _total_trip_time(total_trip_time), _time_remaining(time_remaining), _game_state(game_state) {
+pw::fleet::fleet(int owner, int ships, pw::planet* source, pw::planet* destination, int total_time, int travel_remaining, int commitment_remaining, pw::game_state* game_state) :
+  _owner(owner), _ships(ships), _source(source), _destination(destination), _total_time(total_time), _travel_remaining(travel_remaining), _commitment_remaining(commitment_remaining), _game_state(game_state) {
 }
 
 int pw::fleet::owner() const {
@@ -19,16 +19,17 @@ int pw::fleet::ships() const {
   return _destination;
 }
 
-int pw::fleet::total_trip_time() const {
-  return _total_trip_time;
+int pw::fleet::total_time() const {
+  return _total_time;
 }
 
 int pw::fleet::time_remaining() const {
-  return _time_remaining;
+  return _travel_remaining + _commitment_remaining;
 }
 
-void pw::fleet::time_remaining(int time_remaining) {
-  _time_remaining = time_remaining;
+bool pw::fleet::just_launched() const {
+  // not reserves, and not commitments, and not prexisting fleets
+  return _travel_remaining > 0 && _commitment_remaining == 0 && _total_time == _travel_remaining;
 }
 
 void pw::fleet::source(pw::planet* source){
@@ -50,14 +51,14 @@ const pw::fleet& pw::fleet::operator=(const pw::fleet& fleet) {
   _ships = fleet._ships;
   _source = fleet._source;
   _destination = fleet._destination;
-  _total_trip_time = fleet._total_trip_time;
-  _time_remaining = fleet._time_remaining;
+  _total_time = fleet._total_time;
+  _travel_remaining = fleet._travel_remaining;
   _game_state = fleet._game_state;
   return *this;
 }
 
 bool pw::fleet::operator<(const pw::fleet& fleet) const {
-  return _time_remaining < fleet._time_remaining;
+  return _travel_remaining < fleet._travel_remaining;
 }
 
 bool pw::fleet::compare(const pw::fleet* a, const pw::fleet* b) {

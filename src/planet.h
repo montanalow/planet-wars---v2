@@ -47,11 +47,9 @@ public:
   // that these functions only affect your program's copy of the game state.
   // You can't steal your opponent's planets just by changing the owner to 1
   // using the Owner(int) function! :-)
-  void owner(int new_owner);
-  void ships(int ships);
-  void reserve(int ships);
-  void add_ships(int amount);
-  void remove_ships(int amount);
+  pw::fleet* reserve(int ships);
+  pw::fleet* launch(int ships, pw::planet* destination);
+  pw::fleet* commit(int ships, pw::planet* destination, int time);
   void game_state(pw::game_state* game_state);
 
   pw::planet in(int turns) const;
@@ -80,7 +78,6 @@ private:
   double _x, _y;
   int _owner;
   int _ships;
-  int _reserves;
   int _growth_rate;
   pw::game_state* _game_state;
 };

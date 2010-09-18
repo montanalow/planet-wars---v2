@@ -52,8 +52,6 @@ public:
   // else your bot will get kicked and lose the game. For example, you must own
   // source_planet, and you can't send more ships than you actually have on
   // that planet.
-  void issue_order(int source_id, int destination_id, int ships);
-
   // Sends a message to the game engine letting it know that you're done
   // issuing orders for now.
   void finish_turn();
