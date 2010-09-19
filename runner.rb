@@ -65,8 +65,16 @@ options.maps.each do |m|
   options.bots.each do |b|
     next unless running
     if options.players.include? 1
-      `#{options.show ? "tools/playnview" : "tools/playgame"} maps/#{m} 1000 1000 log.txt build/planet_wars bots/#{b} 2> #{options.log}`
-      debug = File.read(options.log).split("\n")
+      begin
+        `#{options.show ? "tools/playnview" : "tools/playgame"} maps/#{m} 1000 1000 log.txt build/planet_wars bots/#{b} 2> #{options.log}`
+        debug = File.read(options.log).split("\n")
+        if debug.empty?
+          puts "lost output...wtf"
+          raise "fuck"
+        end
+      rescue
+        retry 
+      end
       moves = debug.select{|line| (line =~ /Turn \d+/) == 0}.size
       result = debug[-1]
       File.delete options.log
@@ -85,14 +93,22 @@ options.maps.each do |m|
         collisions += 1
         print "### draw ### (#{moves} moves)"
       else
-        print "&&&&&&& what ? #{result}"
+        print "&&&&&&& what:|#{result}|"
       end
       puts " as player 1 vs #{b} @ #{m} | ./runner.rb -b #{b} -m #{m} -p 1 -l tmp.txt -s"
     end
     next unless running
     if options.players.include? 2
-      `#{options.show ? "tools/playnview" : "tools/playgame"} maps/#{m} 1000 1000 log.txt bots/#{b} build/planet_wars 2> #{options.log}`
-      debug = File.read(options.log).split("\n")
+      begin
+        `#{options.show ? "tools/playnview" : "tools/playgame"} maps/#{m} 1000 1000 log.txt bots/#{b} build/planet_wars 2> #{options.log}`
+        debug = File.read(options.log).split("\n")
+        if debug.empty?
+          puts "lost output...wtf"
+          raise "fuck"
+        end
+      rescue
+        retry
+      end
       moves = debug.select{|line| (line =~ /Turn \d+/) == 0}.size
       result = debug[-1]
       File.delete options.log
@@ -111,7 +127,7 @@ options.maps.each do |m|
         collisions += 1
         print "### draw ### (#{moves} moves)"
       else
-        print "&&&&&&& what ? #{result}"
+        print "&&&&&&& what:|#{result}|"
       end
       puts " as player 2 vs #{b} @ #{m} | ./runner.rb -b #{b} -m #{m} -p 2 -l tmp.txt -s"
     end

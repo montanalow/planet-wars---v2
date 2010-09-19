@@ -1,10 +1,28 @@
-version-0.1.2
+*** version-0.1.3 ***
+ratio to examples: 1 (62 avg moves)
+ratio to 0.1.2: 0.639
+ratio to 0.1.1: 0.638
+value 1 move *neutral* conquests at 16 * ratio of distances instead of +0.05 for any 1 move conquest
+
+interesting matches
+./runner.rb -b rage -m map29.txt -p 1 -l tmp.txt -s # shows the weakness against 2 waves of enemy invasions cascading through multiple planets
+
+*** version-0.1.2 ***
 ratio to examples: 1.0 (63 avg moves)
-ratio to previous (0.1.1): 0.609
+ratio to 0.1.1: 0.609
 don't "Reserve against future invaders invading a second target", there was a bug in that code anyway
 
-*version-0.1.1 - September 18, 3316 elo, 6th place
+*** version-0.1.1 ***
+September 18, 3316 elo, 6th place
+ratio to examples: 1.0 (65 avg moves)
 better reinforcement logic
 
-version-0.1 - September 17, 3200 elo, 2nd place
+*** version-0.1.0 ***
+September 17, 3200 elo, 2nd place
 basic defense
+
+
+
+
+
+
