@@ -438,36 +438,37 @@ void pw::game_state::take_turn() {
       }
     }
   }
-*/
+
 
 //  std::cerr << "*** Reserve against future invaders invading a second target ***\n";
-//  for (int i = 0; i < _enemy_fleets.size(); ++i ){
-//    pw::fleet* enemy_fleet = _enemy_fleets[i];
-//    pw::planet before_invasion = enemy_fleet->destination()->in(enemy_fleet->time_remaining());
-//    pw::planet after_invasion = enemy_fleet->destination()->in(enemy_fleet->time_remaining());
-//    if (after_invasion.owner() > 1) {
+  for (int i = 0; i < _enemy_fleets.size(); ++i ){
+    pw::fleet* enemy_fleet = _enemy_fleets[i];
+    pw::planet before_invasion = enemy_fleet->destination()->in(enemy_fleet->time_remaining());
+    pw::planet after_invasion = enemy_fleet->destination()->in(enemy_fleet->time_remaining());
+    if (after_invasion.owner() > 1) {
 //      std::cerr << "spare troops from fleet size: " << enemy_fleet->ships() << " destination: " << enemy_fleet->destination()->id() << "\n";
-//      // TODO: this should be the closest ally after this enemy_fleet lands, not now
-//      pw::planet* closest_ally = enemy_fleet->destination()->closest_ally();
-//      if (closest_ally) {
+      // TODO: this should be the closest ally after this enemy_fleet lands, not now
+      pw::planet* closest_ally = enemy_fleet->destination()->closest_ally();
+      if (closest_ally) {
 //        std::cerr << "closest ally: " << closest_ally->id() << "\n";
-//        int time = enemy_fleet->destination()->time_to(*closest_ally) + enemy_fleet->time_remaining();
-//        if (before_invasion.owner() == after_invasion.owner()) {
-//          closest_ally->commit(enemy_fleet->ships(), closest_ally, time);
-//        } else {
-//          closest_ally->commit(after_invasion.ships(), closest_ally, time);
-//        }
-//      }
-//    }
-//  }
+        int time = enemy_fleet->destination()->time_to(*closest_ally) + enemy_fleet->time_remaining();
+        if (before_invasion.owner() == after_invasion.owner()) {
+          closest_ally->commit(enemy_fleet->ships(), closest_ally, time);
+        } else {
+          closest_ally->commit(after_invasion.ships(), closest_ally, time);
+        }
+      }
+    }
+  }
 
   // make sure that at least half the homeworlds ships are reserved before attacking
   // this is a crappy fix for over spreading on turn 1 without enough info on enemy commitments
-//  if (_turn < 4) {
+  if (_turn < 4) {
 //    std::cerr << "*** Homeworld early turn reserves ***\n";
-//    pw::planet* homeworld = _allied_planets[0];
-//    homeworld->reserve(std::max(homeworld->ships() - (50 / _turn), 0));
-//  }
+    pw::planet* homeworld = _allied_planets[0];
+    homeworld->reserve(std::max(homeworld->ships() - (50 / _turn), 0));
+  }
+*/
 
 
   // attack their planets
@@ -490,8 +491,8 @@ void pw::game_state::take_turn() {
         pw::planet planet_at_arrival = planet->in(time);
 //        std::cerr << "  target:" << planet_at_arrival.id() << " owner: " << planet_at_arrival.owner() << " time: " << time << " ships: " << planet_at_arrival.ships() << " growth: " << planet_at_arrival.growth_rate() << " value: " << planet_at_arrival.value() / time << "\n";
         double value = planet_at_arrival.value() / pow(time,2);
-        if (planet_at_arrival.ships() < source->ships() && planet_at_arrival.owner() != 1){
-          value += 0.05;
+        if (planet_at_arrival.ships() < source->ships() && planet_at_arrival.owner() == 0){
+          value *= 16;
         }
         if (value > highest_value) {
           destination = planet;
@@ -504,7 +505,7 @@ void pw::game_state::take_turn() {
 //        std::cerr << "    no destination\n:";
         break;
       } else {
-  
+
         pw::planet d = destination->in(source->time_to(*destination));
         int ships = d.ships() + 1 + (d.owner() == 2 ? d.growth_rate() : 0);
         for (int i = 0; i < _enemy_fleets.size(); ++i ){
