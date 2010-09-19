@@ -27,9 +27,18 @@ int pw::fleet::time_remaining() const {
   return _travel_remaining + _commitment_remaining;
 }
 
+int pw::fleet::commitment_remaining() const {
+  return _commitment_remaining;
+}
+
 bool pw::fleet::just_launched() const {
   // not reserves, and not commitments, and not prexisting fleets
   return _travel_remaining > 0 && _commitment_remaining == 0 && _total_time == _travel_remaining;
+}
+
+bool pw::fleet::is_commitment() const {
+  // not reserves, and not commitments, and not prexisting fleets
+  return _commitment_remaining > 0;
 }
 
 void pw::fleet::source(pw::planet* source){

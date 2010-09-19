@@ -44,8 +44,10 @@ public:
   // Returns the number of turns until this fleet reaches its destination. If
   // this value is 1, then the fleet will hit the destination planet next turn.
   int time_remaining() const;
-
+  int commitment_remaining() const;
+  
   bool just_launched() const;
+  bool is_commitment() const;
   
 
   void source(pw::planet* source);
