@@ -463,10 +463,10 @@ void pw::game_state::take_turn() {
 
   // make sure that at least half the homeworlds ships are reserved before attacking
   // this is a crappy fix for over spreading on turn 1 without enough info on enemy commitments
-  if (_turn < 4) {
+  if (_turn == 1) {
 //    std::cerr << "*** Homeworld early turn reserves ***\n";
     pw::planet* homeworld = _allied_planets[0];
-    homeworld->reserve(std::max(homeworld->ships() - (50 / _turn), 0));
+    homeworld->reserve(homeworld->ships());// - (50 / _turn), 0));
   }
 */
 
@@ -491,8 +491,11 @@ void pw::game_state::take_turn() {
         pw::planet planet_at_arrival = planet->in(time);
 //        std::cerr << "  target:" << planet_at_arrival.id() << " owner: " << planet_at_arrival.owner() << " time: " << time << " ships: " << planet_at_arrival.ships() << " growth: " << planet_at_arrival.growth_rate() << " value: " << planet_at_arrival.value() / time << "\n";
         double value = planet_at_arrival.value() / pow(time,2);
-        if (planet_at_arrival.ships() < source->ships() && planet_at_arrival.owner() == 0){
-          value *= 16;
+        if (planet_at_arrival.ships() < source->ships() && planet_at_arrival.owner() == 0) {
+          pw::planet* closest_enemy = planet->closest_enemy();
+          if (closest_enemy) {
+            value *= 16 * ((double) planet->time_to(*closest_enemy) / time);
+          }
         }
         if (value > highest_value) {
           destination = planet;
