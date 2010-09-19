@@ -1,6 +1,6 @@
 version-0.1.2
-ration: 1
-compared to 0.1.1: 0.609
+ratio to examples: 1.0 (63 avg moves)
+ratio to previous (0.1.1): 0.609
 don't "Reserve against future invaders invading a second target", there was a bug in that code anyway
 
 *version-0.1.1 - September 18, 3316 elo, 6th place
