@@ -1,0 +1,10 @@
+version-0.1.2
+ration: 1
+compared to 0.1.1: 0.609
+don't "Reserve against future invaders invading a second target", there was a bug in that code anyway
+
+*version-0.1.1 - September 18, 3316 elo, 6th place
+better reinforcement logic
+
+version-0.1 - September 17, 3200 elo, 2nd place
+basic defense
