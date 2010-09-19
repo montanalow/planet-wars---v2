@@ -11,7 +11,7 @@ options = OpenStruct.new \
   :tcp => false,
   :show => false,
   :maps => Dir.entries("./maps").select{|m| m[-4..-1] == ".txt"}.sort{|a,b| a[3..-4].to_i <=> b[3..-4].to_i},
-  :bots => Dir.entries("./example_bots").select {|m| m[-4..-1] == ".jar"},
+  :bots => Dir.entries("./bots").select {|b| b[0..10] != "planet_wars" && b[0] != '.'},
   :players => [1,2],
   :log => "debug.log"
 
@@ -23,7 +23,7 @@ OptionParser.new do |parser|
     options.maps = maps.map{|map| map[-4..-1] == ".txt" ? map : "map#{map}.txt"}
   end
   parser.on "-b", "--bots [BOTS]", Array, "an optional list of bots to play, defaults to all .jar in ./example_bots" do |bots|
-    options.bots = bots.map{|bot| bot[-4..-1] == ".jar" ? bot : "#{bot}Bot.jar"}
+    options.bots = bots
   end
   parser.on "-t", "--tcp" do
     options.tcp = true
@@ -65,7 +65,7 @@ options.maps.each do |m|
   options.bots.each do |b|
     next unless running
     if options.players.include? 1
-      `java -jar tools/PlayGame-1.2.jar maps/#{m} 4000 1000 log.txt build/planet_wars "java -jar example_bots/#{b}" 2> #{options.log} #{options.show ? "| java -jar tools/ShowGame.jar" : ""}`
+      `#{options.show ? "tools/playnview" : "tools/playgame"} maps/#{m} 1000 1000 log.txt build/planet_wars bots/#{b} 2> #{options.log}`
       debug = File.read(options.log).split("\n")
       moves = debug.select{|line| (line =~ /Turn \d+/) == 0}.size
       result = debug[-1]
@@ -84,12 +84,14 @@ options.maps.each do |m|
         m_results[m][:draws] += 1
         collisions += 1
         print "### draw ### (#{moves} moves)"
+      else
+        print "&&&&&&& what ? #{result}"
       end
       puts " as player 1 vs #{b} @ #{m} | ./runner.rb -b #{b} -m #{m} -p 1 -l tmp.txt -s"
     end
     next unless running
     if options.players.include? 2
-      `java -jar tools/PlayGame-1.2.jar maps/#{m} 1000 1000 log.txt "java -jar example_bots/#{b}" build/planet_wars 2> #{options.log} #{options.show ? "| java -jar tools/ShowGame.jar" : ""}`
+      `#{options.show ? "tools/playnview" : "tools/playgame"} maps/#{m} 1000 1000 log.txt bots/#{b} build/planet_wars 2> #{options.log}`
       debug = File.read(options.log).split("\n")
       moves = debug.select{|line| (line =~ /Turn \d+/) == 0}.size
       result = debug[-1]
@@ -108,8 +110,10 @@ options.maps.each do |m|
         m_results[m][:draws] += 1
         collisions += 1
         print "### draw ### (#{moves} moves)"
+      else
+        print "&&&&&&& what ? #{result}"
       end
-      puts " as player 1 vs #{b} @ #{m} | ./runner.rb -b #{b} -m #{m} -p 2 -l tmp.txt -s"
+      puts " as player 2 vs #{b} @ #{m} | ./runner.rb -b #{b} -m #{m} -p 2 -l tmp.txt -s"
     end
   end
 end
