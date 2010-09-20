@@ -44,11 +44,12 @@ end.parse!
 
 if options.tcp
   while running do
-    puts `./tools/tcp 213.3.30.106 9999 montanalow-0.1 ./build/planet_wars`
+    puts "\nStarting match"
+    puts `./tools/tcp 72.44.46.68 995 montanalow-0.1.3 ./build/planet_wars`
     print "next match in"
     (1...10).each do |i|
-      print " #{i}"
-      sleep 1
+      print " #{10 - i}"
+      sleep 1 if running
     end
   end
   exit
