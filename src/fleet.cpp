@@ -11,7 +11,8 @@ int pw::fleet::owner() const {
 int pw::fleet::ships() const {
   return _ships;
 }
- pw::planet* pw::fleet::source() {
+
+pw::planet* pw::fleet::source() {
   return _source;
 }
 

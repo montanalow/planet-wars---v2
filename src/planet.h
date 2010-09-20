@@ -51,6 +51,7 @@ public:
   pw::fleet* launch(int ships, pw::planet* destination);
   pw::fleet* commit(int ships, pw::planet* destination, int time);
   void game_state(pw::game_state* game_state);
+  void ships(int ships);
 
   pw::planet in(int turns) const;
   double value() const;

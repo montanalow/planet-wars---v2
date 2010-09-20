@@ -49,7 +49,6 @@ public:
   bool just_launched() const;
   bool is_commitment() const;
   
-
   void source(pw::planet* source);
   void destination(pw::planet* destination);
   void game_state(pw::game_state* game_state);

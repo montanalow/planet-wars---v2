@@ -273,3 +273,8 @@ bool pw::planet::operator<(const pw::planet& planet) const {
 bool pw::planet::compare(const pw::planet* a, const pw::planet* b) {
   return *a < *b;
 }
+
+void pw::planet::ships(int ships) {
+  _ships = ships;
+}
+

@@ -20,21 +20,36 @@ pw::game_state::game_state(const std::string& game_state_data, int turn) :
   _max_fleet_time_remaining(0),
   _turn(turn) {
   parse_game_state_data(game_state_data);
+  _check = new game_state(*this);
 }
 
-pw::game_state::game_state(const pw::game_state& game_state, int turn) :
-  _planets(game_state._planets.begin(), game_state._planets.end()),
-  _fleets(game_state._fleets.begin(), game_state._fleets.end()),
-  _allied_planets(game_state._allied_planets.begin(), game_state._allied_planets.end()),
-  _neutral_planets(game_state._neutral_planets.begin(), game_state._neutral_planets.end()),
-  _enemy_planets(game_state._enemy_planets.begin(), game_state._enemy_planets.end()),
-  _allied_fleets(game_state._allied_fleets.begin(), game_state._allied_fleets.end()),
-  _enemy_fleets(game_state._enemy_fleets.begin(), game_state._enemy_fleets.end()),
+pw::game_state::game_state(const pw::game_state& game_state) :
+  _planets(),
+  _fleets(),
+  _allied_planets(),
+  _neutral_planets(),
+  _enemy_planets(),
+  _allied_fleets(),
+  _enemy_fleets(),
   _max_fleet_time_remaining(0),
-  _turn(turn) { }
+  _turn(game_state._turn),
+  _check(NULL) {
+  for (std::vector<pw::planet*>::const_iterator planet = game_state._planets.begin(); planet < game_state._planets.end(); ++planet) {
+    pw::planet* copy = new pw::planet(**planet);
+    copy->game_state(this);
+    _planets.push_back(copy);
+  }
+  for (std::vector<pw::fleet*>::const_iterator fleet = game_state._fleets.begin(); fleet < game_state._fleets.end(); ++fleet) {
+    pw::fleet* copy = new pw::fleet(**fleet);
+    copy->game_state(this);
+    _fleets.push_back(copy);
+  }
+  index();
+}
 
 pw::game_state::~game_state(){
   clear();
+  delete _check;
 }
 
 // data
@@ -193,7 +208,16 @@ int pw::game_state::parse_game_state_data(const std::string& game_state_data) {
 void pw::game_state::finish_turn() {
   for (std::vector<pw::fleet*>::iterator fleet = _allied_fleets.begin(); fleet < _allied_fleets.end(); ++fleet) {
     if ((*fleet)->just_launched()) {
-      std::cout << (*fleet)->source()->id() << " " <<(*fleet)->destination()->id() << " " << (*fleet)->ships() << "\n";
+      pw::planet* check = _check->_planets[(*fleet)->source()->id()];
+      check->ships(check->ships() - (*fleet)->ships());
+      if (check->ships() < 0) {
+//        std::cerr << "###### illegal move : too many ships ######\n" << (*fleet)->source()->id() << " " <<(*fleet)->destination()->id() << " " << (*fleet)->ships() << "\n";
+      }
+      if ((*fleet)->ships() == 0) {
+//        std::cerr << "###### illegal move : no ships in fleet ######\n" << (*fleet)->source()->id() << " " <<(*fleet)->destination()->id() << " " << (*fleet)->ships() << "\n";
+      } else {
+        std::cout << (*fleet)->source()->id() << " " <<(*fleet)->destination()->id() << " " << (*fleet)->ships() << "\n";
+      }
 //      std::cerr << (*fleet)->source()->id() << " " <<(*fleet)->destination()->id() << " " << (*fleet)->ships() << "\n";
     }
   }
