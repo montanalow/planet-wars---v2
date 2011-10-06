@@ -40,14 +40,18 @@ int pw::planet::growth_rate() const {
 pw::fleet* pw::planet::launch(int ships, pw::planet* destination) {
   ships = std::max(0, std::min(_ships, ships));
 //  std::cerr << "LAUNCH | planet: " << _id << " ships: " << ships << "/" << _ships << "\n";
-  if (_owner != 1 || ships == 0) {
+  if (ships == 0) {
     return NULL;
   }
 
   _ships -= ships;
-  pw::fleet* fleet = new pw::fleet(1, ships, this, destination, time_to(*destination), time_to(*destination), 0, _game_state);
+  pw::fleet* fleet = new pw::fleet(_owner, ships, this, destination, time_to(*destination), time_to(*destination), 0, _game_state);
   _game_state->fleets().push_back(fleet);
-  _game_state->allied_fleets().push_back(fleet);
+  if (_owner == 1) {
+    _game_state->allied_fleets().push_back(fleet);
+  } else {
+    _game_state->enemy_fleets().push_back(fleet);
+  }
   return fleet;
 }
 

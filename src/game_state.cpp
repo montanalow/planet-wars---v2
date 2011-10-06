@@ -315,9 +315,19 @@ pw::game_state pw::game_state::operator++(int) {
 }
 
 void pw::game_state::take_turn() {
+//    std::cerr << "*** pretend the enemy goes into an all out attack ***\n";
+  for (int i = 0; i < _enemy_planets.size(); ++i) {
+    // iterate over allied planets largest to smallest
+    pw::planet* planet = _enemy_planets[i];
+    pw::planet* closest_ally = planet->closest_ally();
+    if (closest_ally) {
+      planet->launch(planet->ships(), closest_ally);
+    }
+  }
+
 //  std::cerr << "*** Reserving against " << _enemy_fleets.size() << " enemy fleets ***\n";
   for (int g = 5; g > 0; --g) {
-    for (int i = 0; i < _enemy_fleets.size(); ++i ){
+    for (int i = 0; i < _enemy_fleets.size(); ++i ) {
       pw::fleet* enemy_fleet = _enemy_fleets[i];
       if (enemy_fleet->destination()->growth_rate() != g ) {
         continue;
@@ -368,14 +378,14 @@ void pw::game_state::take_turn() {
 //                std::cerr << "    closest_ally " << source->id() << " is too far away: " << time << "\n";
                 break;
               } else {
-//                std::cerr << "    getting reinforcements from " << source->id() << "\n";
                 pw::fleet* fleet = source->commit(need, enemy_fleet->destination(), diff);
                 if (fleet) {
+//                 std::cerr << "    got "<< fleet->ships() << " reinforcements from " << source->id() << "\n";
                   need -= fleet->ships();
                 }
               }
             } else {
-//              std::cerr << "  no reinforcements available\n";
+//              std::cerr << "  not enough reinforcements available\n";
               break;
             }
           }
@@ -385,20 +395,8 @@ void pw::game_state::take_turn() {
       }
     }
   }
-//  std::cerr << "*** Reserve against closest enemy ***\n";
-  for (int i = 0; i < _enemy_planets.size(); ++i ){
-    // iterate over allied planets largest to smallest
-    pw::planet* planet = _enemy_planets[i];
 
-    pw::planet* closest_ally = planet->closest_ally();
-    if (closest_ally) {
-      int time = planet->time_to(*closest_ally);
-//      std::cerr << "  enemy planet: " << planet->id() << " distance " << time << " turns with " << planet->ships() <<  " ships\n";
-//      std::cerr << "    defender: " << closest_ally->id() << " has " << closest_ally->ships() << " ships + " << closest_ally->growth_rate() * time <<  " production\n";
-      closest_ally->reserve(planet->ships() - (closest_ally->growth_rate() * time));
-    }
-  }
-/* TODO
+  /* TODO
 //  std::cerr << "*** Reserve against closest enemy ***\n";
   for (int i = 0; i < _enemy_planets.size(); ++i ){
     // iterate over allied planets largest to smallest
@@ -487,12 +485,12 @@ void pw::game_state::take_turn() {
 
   // make sure that at least half the homeworlds ships are reserved before attacking
   // this is a crappy fix for over spreading on turn 1 without enough info on enemy commitments
+*/
   if (_turn == 1) {
 //    std::cerr << "*** Homeworld early turn reserves ***\n";
     pw::planet* homeworld = _allied_planets[0];
     homeworld->reserve(homeworld->ships());// - (50 / _turn), 0));
   }
-*/
 
 
   // attack their planets
